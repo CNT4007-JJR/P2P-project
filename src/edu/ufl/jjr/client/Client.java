@@ -31,7 +31,7 @@ public class Client{
 
             //create message controller this will handle dealing with incoming messages as well as sending responses to messages
             //message controller part of peer package
-            messageController = new messageController(in, out, peer); //(assuming want peer maybe not needed?)
+            messageController = new messageController(in, out, peer, socket); //(assuming we want peer and socket maybe not needed?)
 
             //create handshake message (seperate package for messages)?
             //send handshake message
