@@ -2,9 +2,6 @@ package edu.ufl.jjr.server;
 
 import java.net.*;
 import java.io.*;
-import java.nio.*;
-import java.nio.channels.*;
-import java.util.*;
 
 class Server implements Runnable{
 
@@ -26,7 +23,7 @@ class Server implements Runnable{
                 out = new ObjectOutputStream(socket.getOutputStream());
                 out.flush();
 
-                in = new ObjectInputStream(requestSocket.getInputStream());
+                in = new ObjectInputStream(socket.getInputStream());
 
                 //create message controller this will handle dealing with incoming messages as well as sending responses to messages
                 //message controller part of peer package
@@ -38,8 +35,16 @@ class Server implements Runnable{
                 //run message controller on thread
             }
             
+        } catch (IOException e) {
+           System.err.println("IO Error with server!");
+            e.printStackTrace();
         } finally {
-            listener.close();
+            try {
+                listener.close();
+            } catch (IOException e) {
+                System.err.println("IO Error with closing server!");
+                e.printStackTrace();
+            }
         }
 
     }
