@@ -1,16 +1,16 @@
 package edu.ufl.jjr.client;
 
 import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.ConnectException;
 import java.net.Socket;
-
-
+import java.net.UnknownHostException;
 
 
 public class Client{
-    private Peer peer
-    private Peer targetPeer
+    private Peer peer;
+    private Peer targetPeer;
     private ObjectOutputStream out;
     private ObjectInputStream in;
 
@@ -22,12 +22,12 @@ public class Client{
     //link a peer and a target peer
     public void link(){
         try {
-            Socket socket = new Socket(targetPeer.getIp(), targetPeerPeer.getPort());
+            Socket socket = new Socket(targetPeer.getIp(), targetPeer.getPort());
 
             out = new ObjectOutputStream(socket.getOutputStream());
             out.flush();
 
-            in = new ObjectInputStream(requestSocket.getInputStream());
+            in = new ObjectInputStream(socket.getInputStream());
 
             //create message controller this will handle dealing with incoming messages as well as sending responses to messages
             //message controller part of peer package
@@ -35,6 +35,7 @@ public class Client{
 
             //create handshake message (seperate package for messages)?
             //send handshake message
+
 
             //run message controller on thread
 
@@ -49,7 +50,7 @@ public class Client{
             System.err.println("You are trying to connect to an unknown host!");
         }
         catch(IOException ioException){
-            System.err.println("IoException!")
+            System.err.println("IoException!");
             ioException.printStackTrace();
         }
     }
