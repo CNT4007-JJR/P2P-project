@@ -12,7 +12,7 @@ public class Peer{
     public String hostName;
     public int portNumber;
     public int containsFile;
-    public Hashtable<Integer, ArrayList<Byte>> peerManager;
+    public Hashtable<Integer, Byte> peerManager;
 
 
     //Common properties known by all peers, based off Common.cfg file
@@ -62,8 +62,13 @@ public class Peer{
         this.hostName = hostName;
         this.portNumber = portNumber;
         this.containsFile = containsFile;
+        this.peerManager = new Hashtable<Integer, Byte>();
 
         return true;
+    }
+
+    public void addInitialPeerConnection(int peerID, byte filePieces){
+        peerManager.put(peerID, filePieces);
     }
 
 

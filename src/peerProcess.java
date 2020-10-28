@@ -2,7 +2,10 @@ import edu.ufl.jjr.peer.Peer;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.InputStreamReader;
 import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Scanner;
 
 public class peerProcess {
@@ -21,6 +24,25 @@ public class peerProcess {
             peers.put(peer.peerID, peer);
         }
 
-        System.out.println(peers.get(1006).hostName);
+        scnr.close();
+
+        System.out.println("Peer Process ID: " + arg[0]);
+        int peerID = Integer.parseInt(arg[0]);
+        System.out.println("Peer Process Port Number: " + peers.get(peerID).hostName);
+        System.out.println("Peer Process Port Number: " + peers.get(peerID).portNumber);
+        System.out.println("Peer Process Port Number: " + peers.get(peerID).containsFile);
+
+        Iterator peersIterator = peers.entrySet().iterator();
+
+        while(peersIterator.hasNext()){
+            Map.Entry peerElement = (Map.Entry)peersIterator.next();
+            if((int) peerElement.getKey() < peerID){
+                System.out.println((int)(peerElement.getKey()));
+                peers.get(peerID).addInitialPeerConnection((int)(peerElement.getKey()), (byte) 0);
+            }
+        }
+        System.out.println("Connected Peers: " + peers.get(peerID).peerManager);
+
+
     }
 }
