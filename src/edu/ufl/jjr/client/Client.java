@@ -1,5 +1,8 @@
 package edu.ufl.jjr.client;
 
+import edu.ufl.jjr.peer.MessageHandler;
+import edu.ufl.jjr.peer.Peer;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -14,6 +17,7 @@ public class Client{
     private ObjectOutputStream out;
     private ObjectInputStream in;
 
+    //takes host peer and target peer
     public Client(Peer peer, Peer targetPeer){
         this.peer = peer;
         this.targetPeer = targetPeer;
@@ -22,29 +26,30 @@ public class Client{
     //link a peer and a target peer
     public void link(){
         try {
-            Socket socket = new Socket(targetPeer.getIp(), targetPeer.getPort());
+            Socket socket = new Socket(targetPeer.hostName, targetPeer.portNumber);
 
             out = new ObjectOutputStream(socket.getOutputStream());
             out.flush();
 
             in = new ObjectInputStream(socket.getInputStream());
 
-            //create message controller this will handle dealing with incoming messages as well as sending responses to messages
-            //message controller part of peer package
-            messageController = new messageController(in, out, peer, socket); //(assuming we want peer and socket maybe not needed?)
 
-            //create handshake message (seperate package for messages)?
+            //create message handler this will handle dealing with incoming messages as well as sending responses to messages
+            MessageHandler handler = new MessageHandler(in, out, peer, socket); //(assuming we want peer and socket maybe not needed?)
+
+            //start handler on own thread
+            Thread serverThread = new Thread(handler);
+            serverThread.start();
+
+            String handshake = "handshake message";
             //send handshake message
-
+            handler.send(handshake);
 
             //run message controller on thread
 
         }
         catch (ConnectException e) {
             System.err.println("Connection refused. You need to initiate a server first.");
-        }
-        catch ( ClassNotFoundException e ) {
-            System.err.println("Class not found");
         }
         catch(UnknownHostException unknownHost){
             System.err.println("You are trying to connect to an unknown host!");

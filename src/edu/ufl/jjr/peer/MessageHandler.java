@@ -1,4 +1,4 @@
-package edu.ufl.jjr;
+package edu.ufl.jjr.peer;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -22,7 +22,7 @@ public class MessageHandler implements Runnable {
         while(true){
             try {
                 String message = (String)in.readObject();
-                System.out.println(peer.getId() + " received this message " + message);
+                System.out.println(peer.peerID + " received this message " + message);
                 send("message received");
 
             } catch (IOException e) {
@@ -37,7 +37,7 @@ public class MessageHandler implements Runnable {
         try{
             out.writeObject(msg);
             out.flush();
-            System.out.println("Send message: " + msg + " from " + peer.getId());
+            System.out.println("Send message: " + msg + " from " + peer.peerID);
         }
         catch(IOException ioException){
             ioException.printStackTrace();

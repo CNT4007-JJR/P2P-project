@@ -1,9 +1,15 @@
 package edu.ufl.jjr.server;
 
-import java.net.*;
-import java.io.*;
+import edu.ufl.jjr.peer.Peer;
+import edu.ufl.jjr.peer.MessageHandler;
 
-class Server implements Runnable{
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
+
+public class Server implements Runnable{
 
     private Peer peer;
     private Socket socket;
@@ -15,7 +21,13 @@ class Server implements Runnable{
     }
 
     public void run() {
-        ServerSocket listener = new ServerSocket(peer.getPort());
+        ServerSocket listener = null;
+        try {
+            listener = new ServerSocket(peer.portNumber);
+        } catch (IOException e) {
+            System.err.println("Problem starting server");
+            e.printStackTrace();
+        }
         try {
             while (true) {
                 socket = listener.accept();
@@ -25,14 +37,17 @@ class Server implements Runnable{
 
                 in = new ObjectInputStream(socket.getInputStream());
 
-                //create message controller this will handle dealing with incoming messages as well as sending responses to messages
-                //message controller part of peer package
-                messageController = new messageController(in, out, peer, socket); //(assuming we want peer and socket maybe not needed?)
+                //create message handler this will handle dealing with incoming messages as well as sending responses to messages
+                MessageHandler handler = new MessageHandler(in, out, peer, socket); //(assuming we want peer and socket maybe not needed?)
 
-                //create handshake message (seperate package for messages)?
+                //start handler on own thread
+                Thread serverThread = new Thread(handler);
+                serverThread.start();
+
                 //send handshake message
-
-                //run message controller on thread
+                String handshake = "handshake message";
+                //send handshake message
+                handler.send(handshake);
             }
             
         } catch (IOException e) {
