@@ -40,14 +40,11 @@ public class Server implements Runnable{
                 //create message handler this will handle dealing with incoming messages as well as sending responses to messages
                 MessageHandler handler = new MessageHandler(in, out, peer, socket); //(assuming we want peer and socket maybe not needed?)
 
-                //start handler on own thread
+                //start handler on thread
                 Thread serverThread = new Thread(handler);
                 serverThread.start();
 
-                //send handshake message
-                String handshake = "handshake message";
-                //send handshake message
-                handler.send(handshake);
+
             }
             
         } catch (IOException e) {

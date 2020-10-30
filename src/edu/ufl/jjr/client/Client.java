@@ -41,12 +41,6 @@ public class Client{
             Thread serverThread = new Thread(handler);
             serverThread.start();
 
-            String handshake = "handshake message";
-            //send handshake message
-            handler.send(handshake);
-
-            //run message controller on thread
-
         }
         catch (ConnectException e) {
             System.err.println("Connection refused. You need to initiate a server first.");

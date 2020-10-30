@@ -12,7 +12,7 @@ import java.util.Scanner;
 public class peerProcess {
     public static void main(String arg[]) throws FileNotFoundException {
 
-        File peerConfig = new File("PeerInfo.cfg");
+        File peerConfig = new File("C:\\Users\\joseph\\Desktop\\P2P-project\\PeerInfo.cfg");
         Hashtable<Integer, Peer> peers = new Hashtable<Integer, Peer>();
 
         Scanner scnr = new Scanner(peerConfig);
@@ -37,6 +37,8 @@ public class peerProcess {
         Thread serverThread = new Thread(server);
         serverThread.start();
 
+        System.out.println("Started Server for Peer" + peerID);
+
         Iterator peersIterator = peers.entrySet().iterator();
 
         while(peersIterator.hasNext()){
@@ -46,6 +48,7 @@ public class peerProcess {
                 peers.get(peerID).addInitialPeerConnection((int)(peerElement.getKey()), (byte) 0);
                 Client client= new Client(peers.get(peerID), (Peer)peerElement.getValue());
                 client.link();
+                System.out.println("Peer " + peerID + " connected to " + peerElement.getKey());
             }
         }
         System.out.println("Connected Peers: " + peers.get(peerID).peerManager);

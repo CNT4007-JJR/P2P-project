@@ -19,11 +19,16 @@ public class MessageHandler implements Runnable {
     }
 
     public void run(){
+        String handshake = "handshake message";
+        //send handshake message
+        send(handshake);
         while(true){
             try {
                 String message = (String)in.readObject();
-                System.out.println(peer.peerID + " received this message " + message);
-                send("message received");
+                if(message != null) {
+                    System.out.println(peer.peerID + " received this message " + message);
+                    send("message received");
+                }
 
             } catch (IOException e) {
                 e.printStackTrace();
@@ -37,7 +42,7 @@ public class MessageHandler implements Runnable {
         try{
             out.writeObject(msg);
             out.flush();
-            System.out.println("Send message: " + msg + " from " + peer.peerID);
+            System.out.println("Sending message: " + msg + " from Peer " + peer.peerID);
         }
         catch(IOException ioException){
             ioException.printStackTrace();
