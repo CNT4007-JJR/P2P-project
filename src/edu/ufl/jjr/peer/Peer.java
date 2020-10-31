@@ -55,7 +55,7 @@ public class Peer{
         downloadFileName = prop.getProperty("FileName");
         fileSize = Integer.parseInt(prop.getProperty("FileSize"));
         pieceSize = Integer.parseInt(prop.getProperty("PieceSize"));
-        numPieces = fileSize/pieceSize;
+        numPieces = (int) Math.ceil(fileSize/pieceSize);
 
         return true;
     }
@@ -68,9 +68,14 @@ public class Peer{
         this.peerManager = new Hashtable<Integer, BitSet>();
 
         if(containsFile == 1){
-            this.bitfield.set(0, numPieces-1, true);
+            this.bitfield = new BitSet(numPieces-1);
+            this.bitfield.set(0,numPieces, true);
         }
-        
+        else{
+            this.bitfield = new BitSet(numPieces-1);
+            this.bitfield.set(0,numPieces, false);
+        }
+
         return true;
     }
 

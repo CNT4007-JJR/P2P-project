@@ -24,21 +24,21 @@ public class peerProcess {
 
         scnr.close();
 
-
         System.out.println("Peer Process ID: " + arg[0]);
         int peerID = Integer.parseInt(arg[0]);
 
-        BitSet bitfield = new BitSet(peers.get(peerID).numPieces);
         System.out.println("Peer Process Host Name: " + peers.get(peerID).hostName);
         System.out.println("Peer Process Port Number: " + peers.get(peerID).portNumber);
         System.out.println("Peer Process Contains File: " + peers.get(peerID).containsFile);
+        System.out.println("Peer Process Number of Pieces: " + peers.get(peerID).numPieces);
+        System.out.println("Peer Process Bitfield: " + peers.get(peerID).bitfield);
 
         Iterator peersIterator = peers.entrySet().iterator();
 
         while(peersIterator.hasNext()){
             Map.Entry peerElement = (Map.Entry)peersIterator.next();
             if((int) peerElement.getKey() < peerID){
-                peers.get(peerID).addInitialPeerConnection((int)(peerElement.getKey()), bitfield);
+                peers.get(peerID).addInitialPeerConnection((int)(peerElement.getKey()), peers.get(peerID).bitfield);
             }
         }
         System.out.println("Connected Peers: " + peers.get(peerID).peerManager);
