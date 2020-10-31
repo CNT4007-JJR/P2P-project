@@ -1,4 +1,5 @@
 import edu.ufl.jjr.peer.Peer;
+import edu.ufl.jjr.writingLog.WritingLog;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -11,7 +12,7 @@ import java.util.Scanner;
 public class peerProcess {
     public static void main(String arg[]) throws FileNotFoundException {
 
-        File peerConfig = new File("C:/Users/rober/Desktop/Networking-Project/P2P-project/PeerInfo.cfg");
+        File peerConfig = new File("/Users/jonathanmorales/Desktop/P2P-project/PeerInfo.cfg");
         Hashtable<Integer, Peer> peers = new Hashtable<Integer, Peer>();
 
         Scanner scnr = new Scanner(peerConfig);
@@ -42,6 +43,9 @@ public class peerProcess {
             }
         }
         System.out.println("Connected Peers: " + peers.get(peerID).peerManager);
+
+        WritingLog first = new WritingLog("1000");
+        first.test("this is a test");
 
 
     }
