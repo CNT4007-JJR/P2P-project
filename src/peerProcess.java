@@ -43,10 +43,6 @@ public class peerProcess {
             }
         }
         System.out.println("Connected Peers: " + peers.get(peerID).peerManager);
-
-        WritingLog first = new WritingLog("1000");
-        first.test("this is a test");
-
-
+        
     }
 }
