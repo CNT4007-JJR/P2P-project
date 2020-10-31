@@ -25,7 +25,7 @@ public class MessageHandler implements Runnable {
         while(true){
             try {
                 String message = (String)in.readObject();
-                if(message != null) {
+                if(message.equals(handshake)) {
                     System.out.println(peer.peerID + " received this message " + message);
                     send("message received");
                 }

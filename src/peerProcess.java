@@ -12,7 +12,7 @@ import java.util.Scanner;
 public class peerProcess {
     public static void main(String arg[]) throws FileNotFoundException {
 
-        File peerConfig = new File("C:\\Users\\joseph\\Desktop\\P2P-project\\PeerInfo.cfg");
+        File peerConfig = new File("PeerInfo.cfg");
         Hashtable<Integer, Peer> peers = new Hashtable<Integer, Peer>();
 
         Scanner scnr = new Scanner(peerConfig);
