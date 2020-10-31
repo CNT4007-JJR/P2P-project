@@ -38,11 +38,10 @@ public class peerProcess {
         while(peersIterator.hasNext()){
             Map.Entry peerElement = (Map.Entry)peersIterator.next();
             if((int) peerElement.getKey() < peerID){
-                peers.get(peerID).addInitialPeerConnection((int)(peerElement.getKey()), peers.get(peerID).bitfield);
+                peers.get(peerID).addInitialPeerConnection((int)(peerElement.getKey()), peers.get((int)(peerElement.getKey())).bitfield );
             }
         }
         System.out.println("Connected Peers: " + peers.get(peerID).peerManager);
-
 
     }
 }

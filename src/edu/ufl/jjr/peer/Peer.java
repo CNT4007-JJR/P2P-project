@@ -66,14 +66,10 @@ public class Peer{
         this.portNumber = portNumber;
         this.containsFile = containsFile;
         this.peerManager = new Hashtable<Integer, BitSet>();
+        this.bitfield = new BitSet(numPieces-1);
 
         if(containsFile == 1){
-            this.bitfield = new BitSet(numPieces-1);
             this.bitfield.set(0,numPieces, true);
-        }
-        else{
-            this.bitfield = new BitSet(numPieces-1);
-            this.bitfield.set(0,numPieces, false);
         }
 
         return true;
