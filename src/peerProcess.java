@@ -43,6 +43,24 @@ public class peerProcess {
             }
         }
         System.out.println("Connected Peers: " + peers.get(peerID).peerManager);
-        
+
+        // logging testing
+//
+//      Peer peer_1 = new Peer();
+//      peer_1.peerID = 1000;
+//
+//      Peer peer_2 = new Peer();
+//      peer_2.peerID = 1001;
+//
+//
+//      WritingLog test_1 = new WritingLog(peer_1);
+//      test_1.test("attempt 1");
+//      test_1.test("attempt 2");
+//
+//      WritingLog test_2 = new WritingLog(peer_2);
+//      test_2.test("attempt 1");
+//      test_2.test("attempt 2");
+
+
     }
 }
