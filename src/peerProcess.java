@@ -1,12 +1,10 @@
 import edu.ufl.jjr.peer.Peer;
+import edu.ufl.jjr.MessageCreator.MessageCreator;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.InputStreamReader;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Scanner;
+import java.util.*;
 
 public class peerProcess {
     public static void main(String arg[]) throws FileNotFoundException {
@@ -26,19 +24,21 @@ public class peerProcess {
 
         scnr.close();
 
+
         System.out.println("Peer Process ID: " + arg[0]);
         int peerID = Integer.parseInt(arg[0]);
-        System.out.println("Peer Process Port Number: " + peers.get(peerID).hostName);
+
+        BitSet bitfield = new BitSet(peers.get(peerID).numPieces);
+        System.out.println("Peer Process Host Name: " + peers.get(peerID).hostName);
         System.out.println("Peer Process Port Number: " + peers.get(peerID).portNumber);
-        System.out.println("Peer Process Port Number: " + peers.get(peerID).containsFile);
+        System.out.println("Peer Process Contains File: " + peers.get(peerID).containsFile);
 
         Iterator peersIterator = peers.entrySet().iterator();
 
         while(peersIterator.hasNext()){
             Map.Entry peerElement = (Map.Entry)peersIterator.next();
             if((int) peerElement.getKey() < peerID){
-                System.out.println((int)(peerElement.getKey()));
-                peers.get(peerID).addInitialPeerConnection((int)(peerElement.getKey()), (byte) 0);
+                peers.get(peerID).addInitialPeerConnection((int)(peerElement.getKey()), bitfield);
             }
         }
         System.out.println("Connected Peers: " + peers.get(peerID).peerManager);
