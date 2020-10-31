@@ -26,7 +26,50 @@ public class WritingLog {
         }
     }
 
-    public void test(String msg){
+    public void tcpConnectiontoPeer(String msg){
         logger.info(msg);
     }
+
+    public void connectedFromPeer(String msg){
+        logger.info(msg);
+    }
+
+    public void changeNeighbors(String msg){
+        logger.info(msg);
+    }
+
+    public void optimisticUnchoke(String msg){
+        logger.info(msg);
+    }
+
+    public void unchokedByNeighbor(String msg){
+        logger.info(msg);
+    }
+
+    public void chokedByNeighbor(String msg){
+        logger.info(msg);
+    }
+
+    public void receivesHave(String msg){
+        logger.info(msg);
+    }
+
+    public void receivesInterested(String msg){
+        logger.info(msg);
+    }
+
+    public void receivesUninterested(String msg){
+        logger.info(msg);
+    }
+
+    public void finishedDownloadingPiece(String msg){
+        logger.info(msg);
+    }
+
+    public void finishedDownloadComplete(String msg){
+        logger.info(msg);
+    }
+
+
+
 }
