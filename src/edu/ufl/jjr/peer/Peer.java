@@ -30,7 +30,9 @@ public class Peer{
 
     protected boolean readCommonConfig(){
         Properties prop = new Properties();
-        String fileName = "/Users/jonathanmorales/Desktop/P2P-project/Common.cfg";
+      
+        String fileName = "Common.cfg";
+
         InputStream is = null;
 
         try{
