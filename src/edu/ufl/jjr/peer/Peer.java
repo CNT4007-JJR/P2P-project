@@ -12,7 +12,7 @@ public class Peer{
     public String hostName;
     public int portNumber;
     public int containsFile;
-    public Hashtable<Integer, Byte> peerManager;
+    public Hashtable<Integer, BitSet> peerManager;
 
 
     //Common properties known by all peers, based off Common.cfg file
@@ -22,6 +22,8 @@ public class Peer{
     public String downloadFileName;
     public int fileSize;
     public int pieceSize;
+    public int numPieces;
+    public BitSet bitfield;
 
 
     public Peer() throws FileNotFoundException {
@@ -55,6 +57,7 @@ public class Peer{
         downloadFileName = prop.getProperty("FileName");
         fileSize = Integer.parseInt(prop.getProperty("FileSize"));
         pieceSize = Integer.parseInt(prop.getProperty("PieceSize"));
+        numPieces = (int) Math.ceil(fileSize/pieceSize);
 
         return true;
     }
@@ -64,15 +67,19 @@ public class Peer{
         this.hostName = hostName;
         this.portNumber = portNumber;
         this.containsFile = containsFile;
-        this.peerManager = new Hashtable<Integer, Byte>();
+        this.peerManager = new Hashtable<Integer, BitSet>();
+        this.bitfield = new BitSet(numPieces-1);
+
+        if(containsFile == 1){
+            this.bitfield.set(0,numPieces, true);
+        }
 
         return true;
     }
 
-    public void addInitialPeerConnection(int peerID, byte filePieces){
+    public void addInitialPeerConnection(int peerID, BitSet filePieces){
         peerManager.put(peerID, filePieces);
     }
-
 
 }
 
