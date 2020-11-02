@@ -45,7 +45,7 @@ public class peerProcess {
         System.out.println("Connected Peers: " + peers.get(peerID).peerManager);
 
         // logging testing
-//
+
 //      Peer peer_1 = new Peer();
 //      peer_1.peerID = 1000;
 //
@@ -60,7 +60,7 @@ public class peerProcess {
 //      WritingLog test_2 = new WritingLog(peer_2);
 //      test_2.test("attempt 1");
 //      test_2.test("attempt 2");
-
+//
 
     }
 }

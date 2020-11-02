@@ -27,7 +27,7 @@ public class WritingLog {
         this.logger = Logger.getLogger(Integer.toString(peerID));
 
         // this path needs to be abstracted, right now it is hard coded
-        String dir = "/Users/jonathanmorales/Desktop/P2P-project/project/log_peer_" + Integer.toString(peerID) + ".log";
+        String dir = "log_peer_" + Integer.toString(peerID) + ".log";
 
         try {
             fh = new FileHandler(dir);
