@@ -2,7 +2,8 @@ package edu.ufl.jjr.writingLog;
 
 import edu.ufl.jjr.peer.Peer;
 import java.io.IOException;
-import java.util.logging.Level;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.logging.Logger;
 import java.util.logging.FileHandler;
 import java.util.logging.SimpleFormatter;
@@ -73,6 +74,11 @@ public class WritingLog {
     public void finishedDownloadComplete(String peerID){
     }
 
+    public void time(){
+        SimpleDateFormat formatter= new SimpleDateFormat("yyyy-MM-dd 'at' HH:mm:ss z");
+        Date date = new Date(System.currentTimeMillis());
+        System.out.println(formatter.format(date));
+    }
 
 
 }
