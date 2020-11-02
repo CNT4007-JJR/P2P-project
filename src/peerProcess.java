@@ -1,8 +1,7 @@
 import edu.ufl.jjr.client.Client;
 import edu.ufl.jjr.peer.Peer;
-import edu.ufl.jjr.writingLog.WritingLog;
 import edu.ufl.jjr.server.Server;
-
+import edu.ufl.jjr.writingLog.WritingLog;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -36,6 +35,8 @@ public class peerProcess {
         System.out.println("Peer Process Port Number: " + peers.get(peerID).portNumber);
         System.out.println("Peer Process Port Number: " + peers.get(peerID).containsFile);
 
+        WritingLog logger = new WritingLog(peers.get(peerID));
+
         Server server = new Server(peers.get(peerID));
         Thread serverThread = new Thread(server);
         serverThread.start();
@@ -51,7 +52,8 @@ public class peerProcess {
                 peers.get(peerID).addInitialPeerConnection((int)(peerElement.getKey()), (byte) 0);
                 Client client= new Client(peers.get(peerID), (Peer)peerElement.getValue());
                 client.link();
-                System.out.println("Peer " + peerID + " connected to " + peerElement.getKey());
+                logger.tcpConnectiontoPeer(peerID, (int)peerElement.getKey());
+                //System.out.println("Peer " + peerID + " connected to " + peerElement.getKey());
             }
         }
         System.out.println("Connected Peers: " + peers.get(peerID).peerManager);

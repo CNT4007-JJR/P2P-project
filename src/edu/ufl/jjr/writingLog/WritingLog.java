@@ -44,24 +44,24 @@ public class WritingLog {
 //        logger.info(msg + " " + time());
 //    }
 
-    public void tcpConnectiontoPeer(String peerID_1, String peerID_2){
+    public void tcpConnectiontoPeer(int peerID_1, int peerID_2){
         logger.info(time() + "Peer " + peerID_1 + " makes a connection to Peer " + peerID_2 + ".");
     }
 
-    public void connectedFromPeer(String peerID_1, String peerID_2){
+    public void connectedFromPeer(int peerID_1, int peerID_2){
         logger.info(time() + "Peer " + peerID_1 + " is connected from Peer " + peerID_2 + ".");
     }
 
-    public void changeNeighbors(String peer_ID, String[] neighborIDList){
+    public void changeNeighbors(int peer_ID, String[] neighborIDList){
         logger.info(time() + "Peer " + peer_ID + " has the preferred neighbors " + Arrays.toString(neighborIDList) + ".");
     }
 
-    public void optimisticUnchoke(String peer_ID, String unchokedNeighborID){
+    public void optimisticUnchoke(int peer_ID, String unchokedNeighborID){
         logger.info(time() + "Peer " + peer_ID + " has the optimistically unchoked neighbor "
                 + unchokedNeighborID + ".");
     }
 
-    public void unchokedByNeighbor(String peerID_1, String peerID_2){
+    public void unchokedByNeighbor(int peerID_1, int peerID_2){
         logger.info(time() + "Peer " + peerID_1 + " is unchoked by " + peerID_2 + ".");
     }
 
@@ -69,25 +69,25 @@ public class WritingLog {
         logger.info(time() + "Peer " + peerID_1 + " is choked by " + peerID_2 + ".");
     }
 
-    public void receivesHave(String peerID_1, String peerID_2, int pieceIndex){
+    public void receivesHave(int peerID_1, int peerID_2, int pieceIndex){
         logger.info(time() + "Peer " + peerID_1 + " received the ‘have’ message from" + peerID_2 +
                 " for the piece " + pieceIndex + ".");
     }
 
-    public void receivesInterested(String peerID_1, String peerID_2){
+    public void receivesInterested(int peerID_1, int peerID_2){
         logger.info(time() + "Peer " + peerID_1 + " received the ‘interested’ message from " + peerID_2 + ".");
     }
 
-    public void receivesUninterested(String peerID_1, String peerID_2){
+    public void receivesUninterested(int peerID_1, int peerID_2){
         logger.info(time() + "Peer " + peerID_1 + " received the ‘not interested’ message from " + peerID_2 + ".");
     }
 
-    public void finishedDownloadingPiece(String peerID_1, String peerID_2, int pieceIndex, int numPieces){
+    public void finishedDownloadingPiece(int peerID_1, int peerID_2, int pieceIndex, int numPieces){
         logger.info(time() + "Peer " + peerID_1 + " has downloaded the piece " + pieceIndex + " from " + peerID_2
                 + ". Now the number of pieces it has is " + numPieces + ".");
     }
 
-    public void finishedDownloadComplete(String peerID_1){
+    public void finishedDownloadComplete(int peerID_1){
         logger.info(time() + "Peer " + peerID_1 + " has downloaded the complete file.");
     }
 
