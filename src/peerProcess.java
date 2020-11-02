@@ -1,18 +1,17 @@
 import edu.ufl.jjr.client.Client;
 import edu.ufl.jjr.peer.Peer;
-import edu.ufl.jjr.MessageCreator.MessageCreator;
-import edu.ufl.jjr.writingLog.WritingLog;
 import edu.ufl.jjr.server.Server;
-
+import edu.ufl.jjr.writingLog.WritingLog;
+import edu.ufl.jjr.MessageCreator.MessageCreator;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.InputStreamReader;
+import java.util.*;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Scanner;
-import java.io.InputStreamReader;
-import java.util.*;
 
 
 public class peerProcess {
@@ -43,6 +42,8 @@ public class peerProcess {
         System.out.println("Peer Process Number of Pieces: " + peers.get(peerID).numPieces);
         System.out.println("Peer Process Bitfield: " + peers.get(peerID).bitfield);
 
+        WritingLog logger = new WritingLog(peers.get(peerID));
+
         Server server = new Server(peers.get(peerID));
         Thread serverThread = new Thread(server);
         serverThread.start();
@@ -54,34 +55,15 @@ public class peerProcess {
         while(peersIterator.hasNext()){
             Map.Entry peerElement = (Map.Entry)peersIterator.next();
             if((int) peerElement.getKey() < peerID){
-                System.out.println((int)(peerElement.getKey()));
                 peers.get(peerID).addInitialPeerConnection((int)(peerElement.getKey()), peers.get((int)(peerElement.getKey())).bitfield );
+                System.out.println((int)(peerElement.getKey()));
                 Client client= new Client(peers.get(peerID), (Peer)peerElement.getValue());
                 client.link();
-                System.out.println("Peer " + peerID + " connected to " + peerElement.getKey());
+                logger.tcpConnectiontoPeer(peerID, (int)peerElement.getKey());
+                //System.out.println("Peer " + peerID + " connected to " + peerElement.getKey());
             }
         }
         System.out.println("Connected Peers: " + peers.get(peerID).peerManager);
-
-
-        // logging testing
-
-//      Peer peer_1 = new Peer();
-//      peer_1.peerID = 1000;
-//
-//      Peer peer_2 = new Peer();
-//      peer_2.peerID = 1001;
-//
-//
-//      WritingLog test_1 = new WritingLog(peer_1);
-//      test_1.test("attempt 1");
-//      test_1.test("attempt 2");
-//
-//      WritingLog test_2 = new WritingLog(peer_2);
-//      test_2.test("attempt 1");
-//      test_2.test("attempt 2");
-//
-
 
     }
 }
