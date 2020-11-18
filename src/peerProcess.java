@@ -2,12 +2,9 @@ import edu.ufl.jjr.client.Client;
 import edu.ufl.jjr.peer.Peer;
 import edu.ufl.jjr.server.Server;
 import edu.ufl.jjr.writingLog.WritingLog;
-import edu.ufl.jjr.MessageCreator.MessageCreator;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.InputStreamReader;
-import java.util.*;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
@@ -35,6 +32,8 @@ public class peerProcess {
 
         System.out.println("Peer Process ID: " + arg[0]);
         int peerID = Integer.parseInt(arg[0]);
+
+        peers.get(peerID).readFile();
 
         System.out.println("Peer Process Host Name: " + peers.get(peerID).hostName);
         System.out.println("Peer Process Port Number: " + peers.get(peerID).portNumber);

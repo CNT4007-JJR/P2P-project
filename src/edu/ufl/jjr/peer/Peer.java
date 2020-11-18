@@ -1,9 +1,18 @@
 package edu.ufl.jjr.peer;
 
-import java.util.*;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.BitSet;
+import java.util.Hashtable;
+import java.util.Properties;
+
 //import java.io.FileInputStream;
 //import java.io.InputStream;
-import java.io.*;
 
 public class Peer{
 
@@ -13,6 +22,7 @@ public class Peer{
     public int portNumber;
     public int containsFile;
     public Hashtable<Integer, BitSet> peerManager;
+    public byte[][] file;
 
 
     //Common properties known by all peers, based off Common.cfg file
@@ -79,6 +89,23 @@ public class Peer{
 
     public void addInitialPeerConnection(int peerID, BitSet filePieces){
         peerManager.put(peerID, filePieces);
+    }
+
+    public void readFile(){
+        file = new byte[numPieces+1][];
+        if(containsFile == 1) {
+            try {
+                byte[] allBytes = Files.readAllBytes(Paths.get(downloadFileName));
+                for (int i = 0, j = 0; i < allBytes.length; i += pieceSize, j++) {
+                    byte bytes[] = Arrays.copyOfRange(allBytes, i, i + pieceSize);
+                    file[j] = bytes;
+                }
+            } catch (IOException ioException) {
+                System.out.println("Exception while reading file");
+                ioException.printStackTrace();
+            }
+        }
+        System.out.println("TheFile.dat byte array: " + Arrays.deepToString(file));
     }
 
 }
