@@ -42,18 +42,28 @@ public class MessageHandler implements Runnable {
 
                 if(message[4] == 5){
                     System.out.println("recieved bitfield message" + remotePeerId);
+                    byte[] messagePayload = new byte[message.length-5];
+                    System.arraycopy(message, 5, messagePayload, 0, message.length-5);
+
+
+                    BitSet receivedBitfield  = BitSet.valueOf(messagePayload);
+
+                    System.out.println();
+                    System.out.println("Received bitfield value: " + receivedBitfield);
+                    System.out.println();
+
 
                     //Checking for bitfield values and sending interested/not interested messages
-                    if(peer.bitfield.equals(peer.peerManager.get(remotePeerId))){
+                    if(peer.bitfield.equals(receivedBitfield)){
                         System.out.println("Sending not interested message to peer " + remotePeerId);
                         send(creator.notInterestedMessage());
                     }
-                    else if(peer.bitfield.isEmpty() && !peer.peerManager.get(remotePeerId).isEmpty()){
+                    else if(peer.bitfield.isEmpty() && !receivedBitfield.isEmpty()){
                         System.out.println("Original peer bitfield: " +peer.bitfield);
                         System.out.println("Remote peer bitfield: " + peer.peerManager.get(remotePeerId) );
 
                         BitSet interestingPieces = (BitSet) peer.bitfield.clone();
-                        interestingPieces.or(peer.peerManager.get(remotePeerId));
+                        interestingPieces.or(receivedBitfield);
 
                         System.out.println("Interesting Pieces after or: " + interestingPieces);
                         peer.updateInterestingPieces(remotePeerId, interestingPieces);
@@ -61,12 +71,20 @@ public class MessageHandler implements Runnable {
                         System.out.println("Sending interested message to peer " + remotePeerId);
                         send(creator.interestedMessage());
                     }
+                    else if(!peer.bitfield.isEmpty() && receivedBitfield.isEmpty()){
+                        System.out.println("Original peer bitfield: " + peer.bitfield);
+                        System.out.println("Remote peer bitfield: " + receivedBitfield );
+
+                        System.out.println("Sending not interested message to peer " + remotePeerId);
+                        send(creator.notInterestedMessage());
+
+                    }
                     else{
                         System.out.println("Original peer bitfield: " +peer.bitfield);
-                        System.out.println("Remote peer bitfield: " + peer.peerManager.get(remotePeerId) );
+                        System.out.println("Remote peer bitfield: " + receivedBitfield );
 
                         BitSet interestingPieces = (BitSet) peer.bitfield.clone();
-                        interestingPieces.or(peer.peerManager.get(remotePeerId));
+                        interestingPieces.or(receivedBitfield);
 
                         System.out.println("Interesting Pieces after or: " + interestingPieces);
                         interestingPieces.xor(interestingPieces);
@@ -78,7 +96,30 @@ public class MessageHandler implements Runnable {
                         send(creator.interestedMessage());
                     }
 
-                }else{
+                }
+                else if(message[4] == 0){
+                    System.out.println("Received choke message from " + remotePeerId);
+                }
+                else if(message[4] == 1){
+                    System.out.println("Received unchoke message from " + remotePeerId);
+                }
+                else if(message[4] == 2){
+                    System.out.println("Received interested message from " + remotePeerId);
+                    
+                }
+                else if(message[4] == 3){
+                    System.out.println("Received not interested message from " + remotePeerId);
+                }
+                else if(message[4] == 4){
+                    System.out.println("Received have message from " + remotePeerId);
+                }
+                else if(message[4] == 6){
+                    System.out.println("Received request message from " + remotePeerId);
+                }
+                else if(message[4] == 7){
+                    System.out.println("Received piece message from " + remotePeerId);
+                }
+                else{
                 ByteBuffer buffer =  ByteBuffer.wrap(message);
                 byte[] header = new byte[18];
                 buffer.get(header,0,18);

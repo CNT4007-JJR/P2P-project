@@ -22,6 +22,8 @@ public class Peer{
     public int portNumber;
     public int containsFile;
     public Hashtable<Integer, BitSet> peerManager;
+    public Hashtable<Integer, BitSet> interestedPeers;
+    public Hashtable<Integer, Peer> unchokedPeers;
     public Hashtable<Integer, BitSet> interestingPieces;
     public byte[][] file;
 
@@ -80,6 +82,7 @@ public class Peer{
         this.containsFile = containsFile;
         this.peerManager = new Hashtable<Integer, BitSet>();
         this.interestingPieces = new Hashtable<Integer, BitSet>();
+        this.interestedPeers = new Hashtable<Integer, BitSet>();
         this.bitfield = new BitSet(numPieces);
 
         if(containsFile == 1){
@@ -94,6 +97,9 @@ public class Peer{
     }
 
     public void updateInterestingPieces(int peerID, BitSet pieces) { interestingPieces.put(peerID, pieces); }
+
+   public void addInterestedPeer(int peerID, BitSet interestedPeerBitset) { interestedPeers.put(peerID, interestedPeerBitset);}
+   public void removeInterestedPeer(int peerID) { interestedPeers.remove(peerID);}
 
     public void readFile(){
         file = new byte[numPieces][];
