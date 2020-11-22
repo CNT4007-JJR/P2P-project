@@ -77,7 +77,7 @@ public class MessageCreator {
         return outputStream.toByteArray();
     }
 
-    public byte[] unchoke() throws IOException {
+    public byte[] unchokeMessage() throws IOException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         int lengthCount = 0;
         byte[] messageLength;

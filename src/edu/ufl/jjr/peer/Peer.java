@@ -22,6 +22,7 @@ public class Peer{
     public int portNumber;
     public int containsFile;
     public Hashtable<Integer, BitSet> peerManager;
+    public Hashtable<Integer, BitSet> interestingPieces;
     public byte[][] file;
 
 
@@ -67,7 +68,7 @@ public class Peer{
         downloadFileName = prop.getProperty("FileName");
         fileSize = Integer.parseInt(prop.getProperty("FileSize"));
         pieceSize = Integer.parseInt(prop.getProperty("PieceSize"));
-        numPieces = (int) Math.ceil(fileSize/pieceSize);
+        numPieces = (int) Math.ceil(fileSize/pieceSize) + 1;
 
         return true;
     }
@@ -78,7 +79,8 @@ public class Peer{
         this.portNumber = portNumber;
         this.containsFile = containsFile;
         this.peerManager = new Hashtable<Integer, BitSet>();
-        this.bitfield = new BitSet(numPieces-1);
+        this.interestingPieces = new Hashtable<Integer, BitSet>();
+        this.bitfield = new BitSet(numPieces);
 
         if(containsFile == 1){
             this.bitfield.set(0,numPieces, true);
@@ -91,8 +93,10 @@ public class Peer{
         peerManager.put(peerID, filePieces);
     }
 
+    public void updateInterestingPieces(int peerID, BitSet pieces) { interestingPieces.put(peerID, pieces); }
+
     public void readFile(){
-        file = new byte[numPieces+1][];
+        file = new byte[numPieces][];
         if(containsFile == 1) {
             try {
                 byte[] allBytes = Files.readAllBytes(Paths.get(downloadFileName));

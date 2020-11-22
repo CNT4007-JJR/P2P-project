@@ -8,6 +8,7 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.BitSet;
 
 public class MessageHandler implements Runnable {
     private Peer peer;
@@ -41,6 +42,42 @@ public class MessageHandler implements Runnable {
 
                 if(message[4] == 5){
                     System.out.println("recieved bitfield message" + remotePeerId);
+
+                    //Checking for bitfield values and sending interested/not interested messages
+                    if(peer.bitfield.equals(peer.peerManager.get(remotePeerId))){
+                        System.out.println("Sending not interested message to peer " + remotePeerId);
+                        send(creator.notInterestedMessage());
+                    }
+                    else if(peer.bitfield.isEmpty() && !peer.peerManager.get(remotePeerId).isEmpty()){
+                        System.out.println("Original peer bitfield: " +peer.bitfield);
+                        System.out.println("Remote peer bitfield: " + peer.peerManager.get(remotePeerId) );
+
+                        BitSet interestingPieces = (BitSet) peer.bitfield.clone();
+                        interestingPieces.or(peer.peerManager.get(remotePeerId));
+
+                        System.out.println("Interesting Pieces after or: " + interestingPieces);
+                        peer.updateInterestingPieces(remotePeerId, interestingPieces);
+
+                        System.out.println("Sending interested message to peer " + remotePeerId);
+                        send(creator.interestedMessage());
+                    }
+                    else{
+                        System.out.println("Original peer bitfield: " +peer.bitfield);
+                        System.out.println("Remote peer bitfield: " + peer.peerManager.get(remotePeerId) );
+
+                        BitSet interestingPieces = (BitSet) peer.bitfield.clone();
+                        interestingPieces.or(peer.peerManager.get(remotePeerId));
+
+                        System.out.println("Interesting Pieces after or: " + interestingPieces);
+                        interestingPieces.xor(interestingPieces);
+
+                        System.out.println("Interesting Pieces after xor: " + interestingPieces);
+                        peer.updateInterestingPieces(remotePeerId, interestingPieces);
+
+                        System.out.println("Sending interested message to peer " + remotePeerId);
+                        send(creator.interestedMessage());
+                    }
+
                 }else{
                 ByteBuffer buffer =  ByteBuffer.wrap(message);
                 byte[] header = new byte[18];
