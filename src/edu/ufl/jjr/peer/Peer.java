@@ -6,10 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.BitSet;
-import java.util.Hashtable;
-import java.util.Properties;
+import java.util.*;
 
 //import java.io.FileInputStream;
 //import java.io.InputStream;
@@ -23,6 +20,8 @@ public class Peer{
     public int containsFile;
     public Hashtable<Integer, BitSet> peerManager;
     public byte[][] file;
+    public int optimisticallyUnchockedPeer;
+    public List<Integer> unchokedPeers;
 
 
     //Common properties known by all peers, based off Common.cfg file
@@ -37,6 +36,8 @@ public class Peer{
 
 
     public Peer() throws FileNotFoundException {
+        this.optimisticallyUnchockedPeer = 0;
+        this.unchokedPeers = new ArrayList<>();
         readCommonConfig();
     }
 
@@ -85,6 +86,41 @@ public class Peer{
         }
 
         return true;
+    }
+
+    public void startOptimisticallyUnchokingPeer() {
+        Peer peer = this;
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while(true) {
+                    peer.optimisticallyUnchokePeer(peer.getInterestedPeers());
+                    try {
+                        Thread.sleep(optimisticUnchokingInterval);
+                    } catch (InterruptedException interruptedException) {
+                        System.out.println("Thread to optimistically unchoke neighbor interrupted while trying to sleep.");
+                        interruptedException.printStackTrace();
+                    }
+                }
+            }
+        });
+        thread.start();
+    }
+
+    private void optimisticallyUnchokePeer(List<Integer> IntersetedPeers) {
+        List<Integer> candidatePeers = new ArrayList<>();
+        for(int interestedPeerId : interestedPeers) { //interested Peers is List<integer> / Array<integer> of interested peers
+            if(unchokedPeers.contains(interestedPeerId)) {
+                candidatePeers.add(interestedPeerId);
+            }
+        }
+        if(!candidatePeers.isEmpty()) {
+            Collections.shuffle(candidatePeers);
+            int optimisticallyUnchokedPeerId = candidatePeers.get(0);
+            byte[] message = UnchokeMessage.getMessage();
+            send(mapWithwhatweneedtoSend.get(optimisticallyUnchokedPeerId).outputStream, message); //do we need to move send method to peer and pass in required variables for sending have map that stores said variables for each peer
+            this.optimisticallyUnchockedPeer = optimisticallyUnchokedPeerId;
+        }
     }
 
     public void addInitialPeerConnection(int peerID, BitSet filePieces){
