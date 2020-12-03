@@ -18,11 +18,12 @@ public class Peer{
     public String hostName;
     public int portNumber;
     public int containsFile;
-    public Hashtable<Integer, BitSet> peerManager;
+    public Hashtable<Integer, Peer> peerManager;
     public List<Integer> interestedPeers;
     public Hashtable<Integer, BitSet> interestingPieces;
     public byte[][] file;
     public int optimisticallyUnchockedPeer;
+    public int downloadedBytes;
     public List<Integer> unchokedPeers;
 
 
@@ -80,10 +81,11 @@ public class Peer{
         this.hostName = hostName;
         this.portNumber = portNumber;
         this.containsFile = containsFile;
-        this.peerManager = new Hashtable<Integer, BitSet>();
+        this.peerManager = new Hashtable<Integer, Peer>();
         this.interestingPieces = new Hashtable<Integer, BitSet>();
         this.interestedPeers = new ArrayList<>();
         this.bitfield = new BitSet(numPieces);
+        this.downloadedBytes = 0;
 
         if(containsFile == 1){
             this.bitfield.set(0,numPieces, true);
@@ -92,11 +94,31 @@ public class Peer{
         return true;
     }
 
-    public void startOptimisticallyUnchokingPeer() {
+    public void setPeerManager(Hashtable<Integer, Peer> peerManager){
+        this.peerManager = peerManager;
+    }
+
+    public List<Integer> getInterestedPeers(){
+        return interestedPeers;
+    }
+
+    public int getDownloadedBytes() {
+        return downloadedBytes;
+    }
+
+    public void updatePeerDownloadedBytes(int bytes){
+        this.downloadedBytes += bytes;
+    }
+
+    public void resetPeerDownloadedBytes() { this.downloadedBytes = 0;}
+
+    /* public void startOptimisticallyUnchokingPeer() {
         Peer peer = this;
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
+
+                //We are gonna have to check when all the peers have completed their download to stop this thread
                 while(true) {
                     peer.optimisticallyUnchokePeer(peer.getInterestedPeers());
                     try {
@@ -125,10 +147,10 @@ public class Peer{
             send(mapWithwhatweneedtoSend.get(optimisticallyUnchokedPeerId).outputStream, message); //do we need to move send method to peer and pass in required variables for sending have map that stores said variables for each peer
             this.optimisticallyUnchockedPeer = optimisticallyUnchokedPeerId;
         }
-    }
+    }*/
 
-    public void addInitialPeerConnection(int peerID, BitSet filePieces){
-        peerManager.put(peerID, filePieces);
+    public void addInitialPeerConnection(int peerID, Peer connectedPeer){
+        peerManager.put(peerID, connectedPeer);
     }
 
     public void updateInterestingPieces(int peerID, BitSet pieces) {

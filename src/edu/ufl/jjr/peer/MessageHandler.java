@@ -8,6 +8,8 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.BitSet;
 
 public class MessageHandler implements Runnable {
@@ -38,7 +40,9 @@ public class MessageHandler implements Runnable {
         send(handshake);
         while(true){
             try {
+                Instant start = Instant.now();
                 byte [] message = (byte[])in.readObject();
+                Instant finish = Instant.now();
 
                 if(message[4] == 5){
                     System.out.println("Peer "+ peer.peerID +" received bitfield message from Peer " + remotePeerId);
@@ -61,7 +65,7 @@ public class MessageHandler implements Runnable {
                     //Checking whether peer is empty, and received bitfield is not, send interested message if so.
                     else if(peer.bitfield.isEmpty() && !receivedBitfield.isEmpty()){
                         System.out.println("Original peer bitfield: " +peer.bitfield);
-                        System.out.println("Remote peer bitfield: " + peer.peerManager.get(remotePeerId) );
+                        System.out.println("Remote peer bitfield: " + receivedBitfield );
 
                         BitSet interestingPieces = (BitSet) peer.bitfield.clone();
                         interestingPieces.or(receivedBitfield);
@@ -73,7 +77,7 @@ public class MessageHandler implements Runnable {
                         System.out.println();
                         send(creator.interestedMessage());
                     }
-                    //Checking whether both received and peer bitfield are empty, send not interested message if so
+                    /* Checking whether both received and peer bitfield are empty, send not interested message if so */
                     else if(peer.bitfield.isEmpty() && receivedBitfield.isEmpty()){
                         System.out.println("Original peer bitfield: " + peer.bitfield);
                         System.out.println("Remote peer bitfield: " + receivedBitfield );
@@ -139,6 +143,14 @@ public class MessageHandler implements Runnable {
                 }
                 else if(message[4] == 7){
                     System.out.println("Received piece message from " + remotePeerId);
+                    int timeElapsed = Duration.between(start, finish).getNano();
+
+                    byte[] messageLength = new byte[4];
+                    byte[] messagePayload = new byte[message.length - 5];
+                    byte[] piece = new byte[messagePayload.length-4];
+                    
+                    peer.updatePeerDownloadedBytes(piece.length);
+
                     System.out.println();
                 }
                 else{

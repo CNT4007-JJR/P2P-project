@@ -176,8 +176,6 @@ public class MessageCreator {
         bitfield.set(28, true);
         bitfield.set(31,true);
 
-
-
         byte[] bitfieldMessage = messageCreator.bitFieldMessage(bitfield);
         ByteBuffer bitfieldBuffer =  ByteBuffer.wrap(bitfieldMessage);
 
