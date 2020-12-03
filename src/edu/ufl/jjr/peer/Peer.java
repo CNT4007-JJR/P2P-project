@@ -6,10 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.BitSet;
-import java.util.Hashtable;
-import java.util.Properties;
+import java.util.*;
 
 //import java.io.FileInputStream;
 //import java.io.InputStream;
@@ -22,8 +19,7 @@ public class Peer{
     public int portNumber;
     public int containsFile;
     public Hashtable<Integer, BitSet> peerManager;
-    public Hashtable<Integer, BitSet> interestedPeers;
-    public Hashtable<Integer, Peer> unchokedPeers;
+    public List<Integer> interestedPeers;
     public Hashtable<Integer, BitSet> interestingPieces;
     public byte[][] file;
 
@@ -70,7 +66,7 @@ public class Peer{
         downloadFileName = prop.getProperty("FileName");
         fileSize = Integer.parseInt(prop.getProperty("FileSize"));
         pieceSize = Integer.parseInt(prop.getProperty("PieceSize"));
-        numPieces = (int) Math.ceil(fileSize/pieceSize) + 1;
+        numPieces = (int) Math.ceil((double)fileSize/pieceSize);
 
         return true;
     }
@@ -82,7 +78,7 @@ public class Peer{
         this.containsFile = containsFile;
         this.peerManager = new Hashtable<Integer, BitSet>();
         this.interestingPieces = new Hashtable<Integer, BitSet>();
-        this.interestedPeers = new Hashtable<Integer, BitSet>();
+        this.interestedPeers = new ArrayList<>();
         this.bitfield = new BitSet(numPieces);
 
         if(containsFile == 1){
@@ -96,10 +92,37 @@ public class Peer{
         peerManager.put(peerID, filePieces);
     }
 
-    public void updateInterestingPieces(int peerID, BitSet pieces) { interestingPieces.put(peerID, pieces); }
+    public void updateInterestingPieces(int peerID, BitSet pieces) {
 
-   public void addInterestedPeer(int peerID, BitSet interestedPeerBitset) { interestedPeers.put(peerID, interestedPeerBitset);}
-   public void removeInterestedPeer(int peerID) { interestedPeers.remove(peerID);}
+        if(interestingPieces.containsKey(peerID)){
+            if(pieces.isEmpty()){
+                interestingPieces.remove(peerID);
+            }
+            else{
+                interestingPieces.replace(peerID, interestingPieces.get(peerID), pieces);
+            }
+        }
+        else{
+            interestingPieces.put(peerID, pieces);
+        }
+    }
+
+   public void addInterestedPeer(int peerID) {
+        if(interestedPeers.contains(peerID)){
+            System.out.println("Peer labeled as interested.");
+        }
+        else{
+            interestedPeers.add(peerID);
+        }
+    }
+   public void removeInterestedPeer(int peerID) {
+        if(interestedPeers.contains(peerID)){
+            interestedPeers.remove(peerID);
+        }
+        else{
+            System.out.println("Peer has been labeled as not interested.");
+        }
+    }
 
     public void readFile(){
         file = new byte[numPieces][];

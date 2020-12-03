@@ -2,6 +2,7 @@ import edu.ufl.jjr.client.Client;
 import edu.ufl.jjr.peer.Peer;
 import edu.ufl.jjr.server.Server;
 import edu.ufl.jjr.writingLog.WritingLog;
+import jdk.internal.cmm.SystemResourcePressureImpl;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -40,6 +41,7 @@ public class peerProcess {
         System.out.println("Peer Process Contains File: " + peers.get(peerID).containsFile);
         System.out.println("Peer Process Number of Pieces: " + peers.get(peerID).numPieces);
         System.out.println("Peer Process Bitfield: " + peers.get(peerID).bitfield);
+        System.out.println();
 
         WritingLog logger = new WritingLog(peers.get(peerID));
 

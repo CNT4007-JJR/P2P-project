@@ -163,8 +163,20 @@ public class MessageCreator {
         System.out.println("Zero Bits Value: " + ByteBuffer.wrap(zeroBits).getInt());
         System.out.println();
 
-        BitSet bitfield = new BitSet(16);
-        bitfield.set(0,15,true);
+        BitSet bitfield = new BitSet(32);
+        bitfield.set(0,true);
+        bitfield.set(3,true);
+        bitfield.set(5,true);
+        bitfield.set(7,true);
+        bitfield.set(11,true);
+        bitfield.set(15,true);
+        bitfield.set(19,true);
+        bitfield.set(23,true);
+        bitfield.set(27,true);
+        bitfield.set(28, true);
+        bitfield.set(31,true);
+
+
 
         byte[] bitfieldMessage = messageCreator.bitFieldMessage(bitfield);
         ByteBuffer bitfieldBuffer =  ByteBuffer.wrap(bitfieldMessage);
