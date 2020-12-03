@@ -148,7 +148,7 @@ public class MessageHandler implements Runnable {
                     byte[] messageLength = new byte[4];
                     byte[] messagePayload = new byte[message.length - 5];
                     byte[] piece = new byte[messagePayload.length-4];
-                    
+
                     peer.updatePeerDownloadedBytes(piece.length);
 
                     System.out.println();

@@ -139,6 +139,86 @@ public class MessageCreator {
 
         return outputStream.toByteArray();
     }
+    public byte[] haveMessage(int pieceIndex) throws IOException{
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+
+        int lengthCount = 0;
+        byte[] messageLength;
+
+        byte[] messageType = new byte[1];
+        lengthCount += messageType.length;
+        messageType[0] = 4;
+
+        ByteBuffer pieceIndexBuffer = ByteBuffer.allocate(4);
+        pieceIndexBuffer.putInt(pieceIndex);
+        byte[] messagePayload = pieceIndexBuffer.array();
+        lengthCount += messagePayload.length;
+
+        ByteBuffer messageLengthBuffer = ByteBuffer.allocate(4);
+        messageLengthBuffer.putInt(lengthCount);
+        messageLength = messageLengthBuffer.array();
+
+        outputStream.write(messageLength);
+        outputStream.write(messageType);
+        outputStream.write(messagePayload);
+
+        return outputStream.toByteArray();
+    }
+
+    public byte[] requestMessage(int pieceIndex) throws IOException{
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+
+        int lengthCount = 0;
+        byte[] messageLength;
+
+        byte[] messageType = new byte[1];
+        lengthCount += messageType.length;
+        messageType[0] = 6;
+
+        ByteBuffer pieceIndexBuffer = ByteBuffer.allocate(4);
+        pieceIndexBuffer.putInt(pieceIndex);
+        byte[] messagePayload = pieceIndexBuffer.array();
+        lengthCount += messagePayload.length;
+
+        ByteBuffer messageLengthBuffer = ByteBuffer.allocate(4);
+        messageLengthBuffer.putInt(lengthCount);
+        messageLength = messageLengthBuffer.array();
+
+        outputStream.write(messageLength);
+        outputStream.write(messageType);
+        outputStream.write(messagePayload);
+
+        return outputStream.toByteArray();
+    }
+
+    public byte[] pieceMessage(int pieceIndex, byte[] pieceContent) throws IOException{
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+
+        int lengthCount = 0;
+        byte[] messageLength;
+
+        byte[] messageType = new byte[1];
+        lengthCount += messageType.length;
+        messageType[0] = 7;
+
+        ByteBuffer pieceIndexBuffer = ByteBuffer.allocate(4);
+        pieceIndexBuffer.putInt(pieceIndex);
+        byte[] pieceIndexByte = pieceIndexBuffer.array();
+
+        lengthCount += pieceIndexByte.length;
+        lengthCount += pieceContent.length;
+
+        ByteBuffer messageLengthBuffer = ByteBuffer.allocate(4);
+        messageLengthBuffer.putInt(lengthCount);
+        messageLength = messageLengthBuffer.array();
+
+        outputStream.write(messageLength);
+        outputStream.write(messageType);
+        outputStream.write(pieceIndexByte);
+        outputStream.write(pieceContent);
+
+        return outputStream.toByteArray();
+    }
 
 
     public static void main(String arg[]) throws IOException {

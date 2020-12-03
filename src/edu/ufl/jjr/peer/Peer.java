@@ -112,6 +112,8 @@ public class Peer{
 
     public void resetPeerDownloadedBytes() { this.downloadedBytes = 0;}
 
+
+
     /* public void startOptimisticallyUnchokingPeer() {
         Peer peer = this;
         Thread thread = new Thread(new Runnable() {
