@@ -31,7 +31,6 @@ public class peerProcess {
 
         scnr.close();
 
-
         System.out.println("Peer Process ID: " + arg[0]);
         int peerID = Integer.parseInt(arg[0]);
 
@@ -58,7 +57,7 @@ public class peerProcess {
         while(peersIterator.hasNext()){
             Map.Entry peerElement = (Map.Entry)peersIterator.next();
             if((int) peerElement.getKey() < peerID){
-                peers.get(peerID).addInitialPeerConnection((int)(peerElement.getKey()), peers.get((int)(peerElement.getKey())) );
+                //peers.get(peerID).addInitialPeerConnection((int)(peerElement.getKey()), peers.get((int)(peerElement.getKey())) );
                 //System.out.println("Peer ID: " + (int)(peerElement.getKey()) + " | Peer values: " + peers.get((int)(peerElement.getKey())) );
                 Client client= new Client(peers.get(peerID), (Peer)peerElement.getValue());
                 client.link();
@@ -68,7 +67,6 @@ public class peerProcess {
         }
 
         System.out.println("Peers List: " + peers.get(peerID).peerManager);
-
 
     }
 }

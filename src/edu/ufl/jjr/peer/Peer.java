@@ -1,11 +1,12 @@
 package edu.ufl.jjr.peer;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
+import edu.ufl.jjr.MessageCreator.MessageCreator;
+
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 
 //import java.io.FileInputStream;
@@ -19,6 +20,8 @@ public class Peer{
     public int portNumber;
     public int containsFile;
     public Hashtable<Integer, Peer> peerManager;
+    public ObjectOutputStream out;
+    private MessageCreator creator;
     public List<Integer> interestedPeers;
     public Hashtable<Integer, BitSet> interestingPieces;
     public byte[][] file;
@@ -36,6 +39,7 @@ public class Peer{
     public int pieceSize;
     public int numPieces;
     public BitSet bitfield;
+    public int completedPeers;
 
 
     public Peer() throws FileNotFoundException {
@@ -66,12 +70,13 @@ public class Peer{
         }
 
         numOfPreferredNeighbors = Integer.parseInt(prop.getProperty("NumberOfPreferredNeighbors"));
-        unchokingInterval = Integer.parseInt(prop.getProperty("UnchokingInterval"));
-        optimisticUnchokingInterval = Integer.parseInt(prop.getProperty("OptimisticUnchokingInterval"));
+        unchokingInterval = Integer.parseInt(prop.getProperty("UnchokingInterval")) * 1000;
+        optimisticUnchokingInterval = Integer.parseInt(prop.getProperty("OptimisticUnchokingInterval")) * 1000;
         downloadFileName = prop.getProperty("FileName");
         fileSize = Integer.parseInt(prop.getProperty("FileSize"));
         pieceSize = Integer.parseInt(prop.getProperty("PieceSize"));
         numPieces = (int) Math.ceil((double)fileSize/pieceSize);
+        completedPeers = 1;
 
         return true;
     }
@@ -84,7 +89,9 @@ public class Peer{
         this.peerManager = new Hashtable<Integer, Peer>();
         this.interestingPieces = new Hashtable<Integer, BitSet>();
         this.interestedPeers = new ArrayList<>();
+        this.unchokedPeers = new ArrayList<>();
         this.bitfield = new BitSet(numPieces);
+        this.creator = new MessageCreator();
         this.downloadedBytes = 0;
 
         if(containsFile == 1){
@@ -94,8 +101,39 @@ public class Peer{
         return true;
     }
 
+    public void setOut(ObjectOutputStream out){
+        this.out = out;
+    }
+
+    public void addInterestedPeer(int peerID) {
+        if(interestedPeers.contains(peerID)){
+            System.out.println("Peer labeled as interested.");
+        }
+        else{
+            interestedPeers.add(peerID);
+        }
+    }
+    public void removeInterestedPeer(int peerID) {
+        if(interestedPeers.contains(peerID)){
+            interestedPeers.remove(peerID);
+        }
+        else{
+            System.out.println("Peer has been labeled as not interested.");
+        }
+    }
+
     public void setPeerManager(Hashtable<Integer, Peer> peerManager){
         this.peerManager = peerManager;
+    }
+
+    public void addUnchokedPeer(int peerID){
+        unchokedPeers.add(peerID);
+    }
+
+    public void removeUnchokedPeer(int peerID){
+        if(interestedPeers.contains(peerID)){
+            interestedPeers.remove(peerID);
+        }
     }
 
     public List<Integer> getInterestedPeers(){
@@ -112,6 +150,184 @@ public class Peer{
 
     public void resetPeerDownloadedBytes() { this.downloadedBytes = 0;}
 
+    public void peerChokeTracker() {
+        Peer peer = this;
+        final Instant[] start = {Instant.now()};
+
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while(completedPeers != peerManager.size()){
+                    try {
+                        preferredPeersSelection(interestedPeers, start[0]);
+                        start[0] = Instant.now();
+                        Thread.sleep(unchokingInterval);
+                    } catch (InterruptedException | IOException e) {
+                        System.out.println("Thread to unchoke neighbor interrupted while trying to sleep.");
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+
+        thread.start();
+    }
+
+    //Helper function for preferredPeerSelection, returns random peer id based on download rate value passed in
+    public static <K, V> K getKey(HashMap<K, V> map, V value) {
+        return map.keySet()
+                .stream()
+                .filter(key -> value.equals(map.get(key)))
+                .findAny().get();
+    }
+
+    //Method used to select the new set of preferred peers
+    public void preferredPeersSelection(List <Integer> interestedPeers, Instant startTime) throws IOException {
+        HashMap<Integer, Double> candidatePeers = new HashMap<Integer, Double>();
+
+        int[] preferredNeighbors = new int[numOfPreferredNeighbors];
+        Instant finish = Instant.now();
+
+        //For each peer (neighbor) in peerManager, except for itself, calculate the download rate
+        peerManager.forEach((id,peerValues) -> {
+            if(id != peerID){
+                int timeElapsed = Duration.between(startTime, finish).getNano();
+                double downloadRate = ((double) downloadedBytes/timeElapsed);
+                candidatePeers.put(id, downloadRate);
+            }
+        });
+
+        //Create a list of all download rates, sort in ascending order
+        Collection<Double> values = candidatePeers.values();
+        ArrayList<Double> listOfValues = new ArrayList<Double>(values);
+        Collections.sort(listOfValues);
+
+        if(interestedPeers.size() != 0){
+            //If the number of interested peers is less than the preferred neighbor limit, just select all interested peers
+            if(interestedPeers.size() <= preferredNeighbors.length){
+                System.out.println("All interested peers fit within preferredNeighbors requirement!");
+
+                for(int i = 0; i < interestedPeers.size(); i++){
+                    preferredNeighbors[i] = interestedPeers.get(i);
+                    System.out.println("Peer: "+ preferredNeighbors[i] +" selected as preferred neighbor!");
+                }
+
+                for(int j = 0; j < preferredNeighbors.length; j++){
+
+                    //Check whether the preferredNeighbor ID is part of the unchoked peers already, add if not
+                    if(!unchokedPeers.contains(preferredNeighbors[j]) && preferredNeighbors[j] != 0){
+                        addUnchokedPeer(preferredNeighbors[j]);
+
+                        System.out.println(preferredNeighbors[j]);
+                        System.out.println(peerManager.get(preferredNeighbors[j]).out);
+                        System.out.println(peerManager.get(peerID).out);
+                        //Send unchoke message
+                        send(creator.unchokeMessage(), peerManager.get(preferredNeighbors[j]).out, preferredNeighbors[j]);
+                    }
+                }
+
+                //Remove any peer from the unchokedPeers list if they are not part of the preferred peers array, send choke message
+                for (int peer: unchokedPeers) {
+                    int preferenceCount = 0;
+                    for(int k = 0; k < preferredNeighbors.length; k++){
+                        if(peer != preferredNeighbors[0]){
+                            preferenceCount++;
+                        }
+                    }
+
+                    if(preferenceCount == preferredNeighbors.length){
+                        System.out.println("Peer "+ peer + "has been choked!");
+
+                        //Send choke message to the removed peer
+                        send(creator.chokeMessage(), peerManager.get(peer).out, peer);
+                        removeUnchokedPeer(peer);
+                    }
+                }
+
+            }
+            else if(containsFile == 1){
+                System.out.println("Peer contains full file, randomly select peers.");
+                //Randomly select preferred peers based on those that are interested
+                Collections.shuffle(interestedPeers);
+
+                for(int i = 0; i < preferredNeighbors.length; i++){
+                    preferredNeighbors[i] = interestedPeers.get(i);
+                    System.out.println("Peer: "+ preferredNeighbors[i] +" selected as preferred neighbor!");
+                }
+
+                for(int j = 0; j < preferredNeighbors.length; j++){
+
+                    //Check whether the preferredNeighbor ID is part of the unchoked peers already, add if not
+                    if(!unchokedPeers.contains(preferredNeighbors[j]) && preferredNeighbors[j] != 0){
+                        addUnchokedPeer(preferredNeighbors[j]);
+
+                        //Send unchoke message
+                        send(creator.unchokeMessage(), peerManager.get(preferredNeighbors[j]).out, preferredNeighbors[j]);
+                    }
+                }
+
+                //Remove any peer from the unchokedPeers list if they are not part of the preferred peers array, send choke message
+                for (int peer: unchokedPeers) {
+                    int preferenceCount = 0;
+                    for(int k = 0; k < preferredNeighbors.length; k++){
+                        if(peer != preferredNeighbors[0]){
+                            preferenceCount++;
+                        }
+                    }
+
+                    if(preferenceCount == preferredNeighbors.length){
+                        System.out.println("Peer "+ peer + "has been choked!");
+
+
+                        //Send choke message to the removed peer
+                        send(creator.chokeMessage(), peerManager.get(peer).out, peer);
+                        removeUnchokedPeer(peer);
+                    }
+                }
+
+            } else  {
+                for(int i = 0; i < preferredNeighbors.length; i++){
+                    if(interestedPeers.contains(getKey(candidatePeers, listOfValues.get(listOfValues.size()-1)))){
+                        System.out.println("Max Download Rate Value: "+ listOfValues.get(listOfValues.size()-1));
+                        preferredNeighbors[i] = getKey(candidatePeers, listOfValues.get(listOfValues.size()-1));
+                        System.out.println("Peer ID that matches value: " + preferredNeighbors[i]);
+                        System.out.println("Peer: "+ preferredNeighbors[i] +" selected as preferred neighbor!");
+                    }
+                    listOfValues.remove(listOfValues.size()-1);
+                }
+
+                //Check whether the preferredNeighbor ID is part of the unchoked peers already, add if not
+                for(int j = 0; j < preferredNeighbors.length; j++){
+                    if(!unchokedPeers.contains(preferredNeighbors[j]) && preferredNeighbors[j] != 0){
+                        addUnchokedPeer(preferredNeighbors[j]);
+
+                        //Send unchoke message
+                        send(creator.unchokeMessage(),  peerManager.get(preferredNeighbors[j]).out, preferredNeighbors[j]);
+                    }
+                }
+
+                //Remove any peer from the unchokedPeers list if they are not part of the preferred peers array, send choke message
+                for (int peer: unchokedPeers) {
+                    int preferenceCount = 0;
+                    for(int k = 0; k < preferredNeighbors.length; k++){
+                        if(peer != preferredNeighbors[0]){
+                            preferenceCount++;
+                        }
+                    }
+
+                    if(preferenceCount == preferredNeighbors.length){
+                        System.out.println("Peer "+ peer + "has been choked!");
+
+                        //Send choke message to the removed peer
+                        send(creator.chokeMessage(), peerManager.get(peer).out, peer);
+                        removeUnchokedPeer(peer);
+                    }
+                }
+
+            }
+        }
+
+    }
 
 
     /* public void startOptimisticallyUnchokingPeer() {
@@ -170,22 +386,6 @@ public class Peer{
         }
     }
 
-   public void addInterestedPeer(int peerID) {
-        if(interestedPeers.contains(peerID)){
-            System.out.println("Peer labeled as interested.");
-        }
-        else{
-            interestedPeers.add(peerID);
-        }
-    }
-   public void removeInterestedPeer(int peerID) {
-        if(interestedPeers.contains(peerID)){
-            interestedPeers.remove(peerID);
-        }
-        else{
-            System.out.println("Peer has been labeled as not interested.");
-        }
-    }
 
     public void readFile(){
         file = new byte[numPieces][];
@@ -202,6 +402,23 @@ public class Peer{
             }
         }
         System.out.println("TheFile.dat byte array: " + Arrays.deepToString(file));
+    }
+
+    public void send(byte [] msg, ObjectOutputStream outputStream, int remotePeerId){
+        try{
+            outputStream.writeObject(msg);
+            outputStream.flush();
+            if(remotePeerId == 0){
+                System.out.println("Sending initial handshake message: " + msg + " from Peer " + peerID);
+            }
+            else{
+                System.out.println("Sending message: " + msg + " from Peer " + peerID +" to Peer " + remotePeerId);
+            }
+            System.out.println();
+        }
+        catch(IOException ioException){
+            ioException.printStackTrace();
+        }
     }
 
 }

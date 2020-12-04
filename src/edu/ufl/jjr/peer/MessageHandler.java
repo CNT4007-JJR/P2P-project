@@ -15,8 +15,8 @@ import java.util.BitSet;
 public class MessageHandler implements Runnable {
     private Peer peer;
     private int remotePeerId;
-    private ObjectOutputStream out;
     private ObjectInputStream in;
+    private ObjectOutputStream out;
     private Socket socket;
     private MessageCreator creator;
 
@@ -37,12 +37,11 @@ public class MessageHandler implements Runnable {
             e.printStackTrace();
         }
         //send handshake message
-        send(handshake);
+        peer.send(handshake, out, remotePeerId);
+        peer.peerChokeTracker();
         while(true){
             try {
-                Instant start = Instant.now();
                 byte [] message = (byte[])in.readObject();
-                Instant finish = Instant.now();
 
                 if(message[4] == 5){
                     System.out.println("Peer "+ peer.peerID +" received bitfield message from Peer " + remotePeerId);
@@ -60,7 +59,7 @@ public class MessageHandler implements Runnable {
                     if(peer.bitfield.equals(receivedBitfield)){
                         System.out.println("Sending not interested message to peer " + remotePeerId);
                         System.out.println();
-                        send(creator.notInterestedMessage());
+                        peer.send(creator.notInterestedMessage(), out, remotePeerId);
                     }
                     //Checking whether peer is empty, and received bitfield is not, send interested message if so.
                     else if(peer.bitfield.isEmpty() && !receivedBitfield.isEmpty()){
@@ -75,7 +74,7 @@ public class MessageHandler implements Runnable {
 
                         System.out.println("Sending interested message to peer " + remotePeerId);
                         System.out.println();
-                        send(creator.interestedMessage());
+                        peer.send(creator.interestedMessage(), out, remotePeerId);
                     }
                     /* Checking whether both received and peer bitfield are empty, send not interested message if so */
                     else if(peer.bitfield.isEmpty() && receivedBitfield.isEmpty()){
@@ -83,7 +82,7 @@ public class MessageHandler implements Runnable {
                         System.out.println("Remote peer bitfield: " + receivedBitfield );
 
                         System.out.println("Sending not interested message to peer " + remotePeerId);
-                        send(creator.notInterestedMessage());
+                        peer.send(creator.notInterestedMessage(), out, remotePeerId);
 
                     }
                     //If both the peer and received bitfield contain pieces, obtain the differences between the two and send interested message
@@ -102,11 +101,11 @@ public class MessageHandler implements Runnable {
 
                         if(interestingPieces.isEmpty()){
                             System.out.println("Sending not interested message to peer: " + remotePeerId);
-                            send(creator.notInterestedMessage());
+                            peer.send(creator.notInterestedMessage(), out, remotePeerId);
                         }
                         else{
                             System.out.println("Sending interested message to peer: " + remotePeerId);
-                            send(creator.interestedMessage());
+                            peer.send(creator.interestedMessage(), out, remotePeerId);
                         }
 
                     }
@@ -143,7 +142,6 @@ public class MessageHandler implements Runnable {
                 }
                 else if(message[4] == 7){
                     System.out.println("Received piece message from " + remotePeerId);
-                    int timeElapsed = Duration.between(start, finish).getNano();
 
                     byte[] messageLength = new byte[4];
                     byte[] messagePayload = new byte[message.length - 5];
@@ -165,7 +163,7 @@ public class MessageHandler implements Runnable {
                     int peerIdInt = ByteBuffer.wrap(peerId).getInt();
                     System.out.println("Peer " + peer.peerID + " received the handshake message from Peer " + peerIdInt);
                     remotePeerId = peerIdInt;
-                    send(creator.bitFieldMessage(peer.bitfield));
+                    peer.send(creator.bitFieldMessage(peer.bitfield), out, remotePeerId);
                     }
                 }
 
@@ -177,15 +175,4 @@ public class MessageHandler implements Runnable {
         }
     }
 
-    public void send(byte [] msg){ //will need to be changed to byte [] msg
-        try{
-            out.writeObject(msg);
-            out.flush();
-            System.out.println("Sending message: " + msg + " from Peer " + peer.peerID +" to Peer " + remotePeerId);
-            System.out.println();
-        }
-        catch(IOException ioException){
-            ioException.printStackTrace();
-        }
-    }
 }
