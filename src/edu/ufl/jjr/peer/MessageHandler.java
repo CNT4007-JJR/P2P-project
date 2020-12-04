@@ -38,7 +38,6 @@ public class MessageHandler implements Runnable {
         }
         //send handshake message
         peer.send(handshake, out, remotePeerId);
-        peer.peerChokeTracker();
         while(true){
             try {
                 byte [] message = (byte[])in.readObject();
@@ -147,7 +146,7 @@ public class MessageHandler implements Runnable {
                     byte[] messagePayload = new byte[message.length - 5];
                     byte[] piece = new byte[messagePayload.length-4];
 
-                    peer.updatePeerDownloadedBytes(piece.length);
+                    peer.peerManager.get(peer).updatePeerDownloadedBytes(piece.length);
 
                     System.out.println();
                 }
@@ -165,6 +164,7 @@ public class MessageHandler implements Runnable {
                     remotePeerId = peerIdInt;
                     peer.send(creator.bitFieldMessage(peer.bitfield), out, remotePeerId);
                     }
+                    peer.peerManager.get(remotePeerId).out = out;
                 }
 
             } catch (IOException e) {

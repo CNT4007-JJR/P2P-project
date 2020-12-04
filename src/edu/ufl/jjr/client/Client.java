@@ -35,7 +35,7 @@ public class Client{
 
             //create message handler this will handle dealing with incoming messages as well as sending responses to messages
             MessageHandler handler = new MessageHandler(in, out, peer, socket); //(assuming we want peer and socket maybe not needed?)
-            peer.setOut(out);
+//            peer.setOut(out);
 
             //start handler on own thread
             Thread serverThread = new Thread(handler);

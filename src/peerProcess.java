@@ -65,7 +65,7 @@ public class peerProcess {
                 //System.out.println("Peer " + peerID + " connected to " + peerElement.getKey());
             }
         }
-
+        peers.get(peerID).peerChokeTracker();
         System.out.println("Peers List: " + peers.get(peerID).peerManager);
 
     }
