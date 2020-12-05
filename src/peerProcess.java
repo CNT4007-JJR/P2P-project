@@ -2,6 +2,7 @@ import edu.ufl.jjr.client.Client;
 import edu.ufl.jjr.peer.Peer;
 import edu.ufl.jjr.server.Server;
 import edu.ufl.jjr.writingLog.WritingLog;
+import jdk.internal.cmm.SystemResourcePressureImpl;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -33,6 +34,7 @@ public class peerProcess {
         System.out.println("Peer Process ID: " + arg[0]);
         int peerID = Integer.parseInt(arg[0]);
 
+        peers.get(peerID).setPeerManager(peers);
         peers.get(peerID).readFile();
 
         System.out.println("Peer Process Host Name: " + peers.get(peerID).hostName);
@@ -40,6 +42,7 @@ public class peerProcess {
         System.out.println("Peer Process Contains File: " + peers.get(peerID).containsFile);
         System.out.println("Peer Process Number of Pieces: " + peers.get(peerID).numPieces);
         System.out.println("Peer Process Bitfield: " + peers.get(peerID).bitfield);
+        System.out.println();
 
         WritingLog logger = new WritingLog(peers.get(peerID));
 
@@ -54,15 +57,17 @@ public class peerProcess {
         while(peersIterator.hasNext()){
             Map.Entry peerElement = (Map.Entry)peersIterator.next();
             if((int) peerElement.getKey() < peerID){
-                peers.get(peerID).addInitialPeerConnection((int)(peerElement.getKey()), peers.get((int)(peerElement.getKey())).bitfield );
-                System.out.println((int)(peerElement.getKey()));
+                //peers.get(peerID).addInitialPeerConnection((int)(peerElement.getKey()), peers.get((int)(peerElement.getKey())) );
+                //System.out.println("Peer ID: " + (int)(peerElement.getKey()) + " | Peer values: " + peers.get((int)(peerElement.getKey())) );
                 Client client= new Client(peers.get(peerID), (Peer)peerElement.getValue());
                 client.link();
                 logger.tcpConnectiontoPeer(peerID, (int)peerElement.getKey());
                 //System.out.println("Peer " + peerID + " connected to " + peerElement.getKey());
             }
         }
-        System.out.println("Connected Peers: " + peers.get(peerID).peerManager);
+        peers.get(peerID).peerChokeTracker();
+        peers.get(peerID).startOptimisticallyUnchokingPeer();
+        System.out.println("Peers List: " + peers.get(peerID).peerManager);
 
     }
 }
