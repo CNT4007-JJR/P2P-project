@@ -143,10 +143,20 @@ public class MessageHandler implements Runnable {
                     System.out.println("Received piece message from " + remotePeerId);
 
                     byte[] messageLength = new byte[4];
-                    byte[] messagePayload = new byte[message.length - 5];
-                    byte[] piece = new byte[messagePayload.length-4];
+                    int messagePayloadLength = message.length - 5;
+                    byte[] pieceIndex = new byte[4];
+                    byte[] piece = new byte[messagePayloadLength-4];
+
+                    System.arraycopy(message, 5,pieceIndex,0,pieceIndex.length);
+                    System.arraycopy(message, 9, piece, 0, piece.length);
+
+                    int pieceIndexInt = ByteBuffer.wrap(pieceIndex).getInt();
 
                     peer.peerManager.get(peer).updatePeerDownloadedBytes(piece.length);
+
+                    //Send have message?
+
+                    peer.peerManager.get(peer).updatePeerBitfield(pieceIndexInt);
 
                     System.out.println();
                 }

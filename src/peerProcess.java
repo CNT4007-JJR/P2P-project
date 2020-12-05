@@ -66,6 +66,7 @@ public class peerProcess {
             }
         }
         peers.get(peerID).peerChokeTracker();
+        peers.get(peerID).startOptimisticallyUnchokingPeer();
         System.out.println("Peers List: " + peers.get(peerID).peerManager);
 
     }

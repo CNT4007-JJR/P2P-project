@@ -147,6 +147,10 @@ public class Peer{
         this.downloadedBytes += bytes;
     }
 
+    public void updatePeerBitfield(int index) {
+        this.bitfield.set(index, true);
+    }
+
     public void resetPeerDownloadedBytes() { this.downloadedBytes = 0;}
 
     public void peerChokeTracker() {
@@ -361,15 +365,19 @@ public class Peer{
     }
 
 
-    /* public void startOptimisticallyUnchokingPeer() {
+    public void startOptimisticallyUnchokingPeer() {
         Peer peer = this;
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
 
                 //We are gonna have to check when all the peers have completed their download to stop this thread
-                while(true) {
-                    peer.optimisticallyUnchokePeer(peer.getInterestedPeers());
+                while(completedPeers != peerManager.size()) {
+                    try {
+                        peer.optimisticallyUnchokePeer(peer.getInterestedPeers());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                     try {
                         Thread.sleep(optimisticUnchokingInterval);
                     } catch (InterruptedException interruptedException) {
@@ -382,24 +390,19 @@ public class Peer{
         thread.start();
     }
 
-    private void optimisticallyUnchokePeer(List<Integer> IntersetedPeers) {
+    private void optimisticallyUnchokePeer(List<Integer> InterestedPeers) throws IOException {
         List<Integer> candidatePeers = new ArrayList<>();
-        for(int interestedPeerId : interestedPeers) { //interested Peers is List<integer> / Array<integer> of interested peers
-            if(unchokedPeers.contains(interestedPeerId)) {
+        for(int interestedPeerId : InterestedPeers) {
+            if(!unchokedPeers.contains(interestedPeerId)) {
                 candidatePeers.add(interestedPeerId);
             }
         }
         if(!candidatePeers.isEmpty()) {
-            Collections.shuffle(candidatePeers);
+            Collections.shuffle(candidatePeers, new Random());
             int optimisticallyUnchokedPeerId = candidatePeers.get(0);
-            byte[] message = UnchokeMessage.getMessage();
-            send(mapWithwhatweneedtoSend.get(optimisticallyUnchokedPeerId).outputStream, message); //do we need to move send method to peer and pass in required variables for sending have map that stores said variables for each peer
+            send(creator.unchokeMessage(), peerManager.get(optimisticallyUnchokedPeerId).out, optimisticallyUnchokedPeerId);
             this.optimisticallyUnchockedPeer = optimisticallyUnchokedPeerId;
         }
-    }*/
-
-    public void addInitialPeerConnection(int peerID, Peer connectedPeer){
-        peerManager.put(peerID, connectedPeer);
     }
 
     public void updateInterestingPieces(int peerID, BitSet pieces) {
