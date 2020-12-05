@@ -89,7 +89,6 @@ public class Peer{
         this.peerManager = new Hashtable<Integer, Peer>();
         this.interestingPieces = new Hashtable<Integer, BitSet>();
         this.interestedPeers = new ArrayList<>();
-        this.unchokedPeers = new ArrayList<>();
         this.bitfield = new BitSet(numPieces);
         this.creator = new MessageCreator();
         this.downloadedBytes = 0;
@@ -131,8 +130,8 @@ public class Peer{
     }
 
     public void removeUnchokedPeer(int peerID){
-        if(interestedPeers.contains(peerID)){
-            interestedPeers.remove(new Integer(peerID));
+        if(unchokedPeers.contains(peerID)){
+            unchokedPeers.remove(new Integer(peerID));
         }
     }
 
@@ -186,6 +185,7 @@ public class Peer{
         HashMap<Integer, Double> candidatePeers = new HashMap<Integer, Double>();
 
         int[] preferredNeighbors = new int[numOfPreferredNeighbors];
+        List<Integer> peersToChoke = new ArrayList<>();
 
         Instant finish = Instant.now();
 
@@ -225,8 +225,6 @@ public class Peer{
                     }
                 }
 
-
-
                 //Remove any peer from the unchokedPeers list if they are not part of the preferred peers array, send choke message
                 for (int peer: unchokedPeers) {
                     System.out.println("Unchoked peer: " + peer);
@@ -245,20 +243,31 @@ public class Peer{
 
                         //Send choke message to the removed peer
                         send(creator.chokeMessage(), peerManager.get(peer).out, peer);
-                        removeUnchokedPeer(peer);
+                        peersToChoke.add(peer);
                     }
                 }
+
+                for (int peer: peersToChoke) {
+                    removeUnchokedPeer(peer);
+                }
+
+
+                System.out.println();
 
             }
             else if(containsFile == 1){
                 System.out.println("Peer contains full file, randomly select peers.");
+                System.out.println();
                 //Randomly select preferred peers based on those that are interested
                 Collections.shuffle(interestedPeers, new Random());
 
+                System.out.println();
                 for(int i = 0; i < preferredNeighbors.length; i++){
                     preferredNeighbors[i] = interestedPeers.get(i);
                     System.out.println("Peer: "+ preferredNeighbors[i] +" selected as preferred neighbor!");
                 }
+                System.out.println();
+
 
                 for(int j = 0; j < preferredNeighbors.length; j++){
 
@@ -271,8 +280,10 @@ public class Peer{
                     }
                 }
 
+
                 //Remove any peer from the unchokedPeers list if they are not part of the preferred peers array, send choke message
                 for (int peer: unchokedPeers) {
+                    System.out.println(unchokedPeers.size());
                     boolean included = false;
                     for (int neighbor: preferredNeighbors) {
                         if (neighbor == peer) {
@@ -286,9 +297,15 @@ public class Peer{
 
                         //Send choke message to the removed peer
                         send(creator.chokeMessage(), peerManager.get(peer).out, peer);
-                        removeUnchokedPeer(peer);
+                        peersToChoke.add(peer);
                     }
                 }
+
+                for (int peer: peersToChoke) {
+                    removeUnchokedPeer(peer);
+                }
+
+                System.out.println();
 
             } else  {
                 for(int i = 0; i < preferredNeighbors.length; i++){
@@ -300,6 +317,7 @@ public class Peer{
                     }
                     listOfValues.remove(listOfValues.size()-1);
                 }
+                System.out.println();
 
                 //Check whether the preferredNeighbor ID is part of the unchoked peers already, add if not
                 for(int j = 0; j < preferredNeighbors.length; j++){
@@ -327,9 +345,15 @@ public class Peer{
 
                         //Send choke message to the removed peer
                         send(creator.chokeMessage(), peerManager.get(peer).out, peer);
-                        removeUnchokedPeer(peer);
+                        peersToChoke.add(peer);
                     }
                 }
+
+                for (int peer: peersToChoke) {
+                    removeUnchokedPeer(peer);
+                }
+
+                System.out.println();
 
             }
         }
