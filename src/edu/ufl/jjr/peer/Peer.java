@@ -48,33 +48,26 @@ public class Peer{
         readCommonConfig();
     }
 
-    protected boolean readCommonConfig(){
-        Properties prop = new Properties();
-      
-        String fileName = "Common.cfg";
+    protected boolean readCommonConfig() throws FileNotFoundException{
+        File commonConfig = new File("Common.cfg");
+        List <String> configVariables = new ArrayList<>();
 
-        InputStream is = null;
+        Scanner commonScan = new Scanner(commonConfig);
 
-        try{
-            is = new FileInputStream(fileName);
-        } catch (FileNotFoundException ex){
-
-            System.out.println(ex);
-            return false;
-        }
-        try {
-            prop.load(is);
-        } catch (IOException ex){
-            System.out.println(ex);
-            return false;
+        while(commonScan.hasNextLine()){
+            String line = commonScan.nextLine();
+            String [] variables = line.split(" ");
+            configVariables.add(variables[1]);
         }
 
-        numOfPreferredNeighbors = Integer.parseInt(prop.getProperty("NumberOfPreferredNeighbors"));
-        unchokingInterval = Integer.parseInt(prop.getProperty("UnchokingInterval")) * 1000;
-        optimisticUnchokingInterval = Integer.parseInt(prop.getProperty("OptimisticUnchokingInterval")) * 1000;
-        downloadFileName = prop.getProperty("FileName");
-        fileSize = Integer.parseInt(prop.getProperty("FileSize"));
-        pieceSize = Integer.parseInt(prop.getProperty("PieceSize"));
+        commonScan.close();
+
+        numOfPreferredNeighbors = Integer.parseInt(configVariables.get(0));
+        unchokingInterval = Integer.parseInt(configVariables.get(1)) * 1000;
+        optimisticUnchokingInterval = Integer.parseInt(configVariables.get(2)) * 1000;
+        downloadFileName = configVariables.get(3);
+        fileSize = Integer.parseInt(configVariables.get(4));
+        pieceSize = Integer.parseInt(configVariables.get(5));
         numPieces = (int) Math.ceil((double)fileSize/pieceSize);
         completedPeers = 1;
 
@@ -96,6 +89,8 @@ public class Peer{
         if(containsFile == 1){
             this.bitfield.set(0,numPieces, true);
         }
+
+        file = new byte[numPieces][];
 
         return true;
     }
@@ -260,8 +255,7 @@ public class Peer{
                     System.out.println("Peer inclusion: " + included);
                     if(!included && peer!=0){
                         System.out.println("Peer "+ peer + " has been choked!");
-
-
+                        
                         //Send choke message to the removed peer
                         send(creator.chokeMessage(), peerManager.get(peer).out, peer);
                         peersToChoke.add(peer);
@@ -300,7 +294,6 @@ public class Peer{
                         send(creator.unchokeMessage(), peerManager.get(preferredNeighbors[j]).out, preferredNeighbors[j]);
                     }
                 }
-
 
                 //Remove any peer from the unchokedPeers list if they are not part of the preferred peers array, send choke message
                 for (int peer: unchokedPeers) {
@@ -439,7 +432,6 @@ public class Peer{
 
 
     public void readFile(){
-        file = new byte[numPieces][];
         if(containsFile == 1) {
             try {
                 byte[] allBytes = Files.readAllBytes(Paths.get(downloadFileName));
