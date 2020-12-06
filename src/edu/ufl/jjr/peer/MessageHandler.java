@@ -117,13 +117,21 @@ public class MessageHandler implements Runnable {
                 else if(message[4] == 1){
                     System.out.println("Received unchoke message from " + remotePeerId);
                     //any logic needed for unchoking (reset timers etc)
-                    //calculate piece we want
-                    int requestPiece = peer.getRequestIndex(remotePeerId);
-                    System.out.println("Requesting Piece " + requestPiece);
-                    //create request message for piece we want
-                    //send request message
-                    peer.send(creator.requestMessage(requestPiece),out,remotePeerId);
-                    System.out.println();
+                    if(!peer.hasFile){
+                        //calculate piece we want
+                        int requestPiece = peer.getRequestIndex(remotePeerId);
+                        System.out.println("Requesting Piece " + requestPiece);
+                        //create request message for piece we want
+                        //send request message
+                        peer.send(creator.requestMessage(requestPiece),out,remotePeerId);
+                        System.out.println();
+                    }
+                    else {
+                        System.out.println("Peer already contains file, send not interested message!");
+                        peer.send(creator.notInterestedMessage(), out, remotePeerId);
+                    }
+
+
                 }
                 else if(message[4] == 2){
                     System.out.println("Received interested message from " + remotePeerId);

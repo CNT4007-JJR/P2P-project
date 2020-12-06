@@ -333,6 +333,7 @@ public class Peer{
                 System.out.println();
 
             } else  {
+                System.out.println("Calculating data rates...");
                 for(int i = 0; i < preferredNeighbors.length; i++){
                     if(interestedPeers.contains(getKey(candidatePeers, listOfValues.get(listOfValues.size()-1)))){
                         System.out.println("Max Download Rate Value: "+ listOfValues.get(listOfValues.size()-1));
