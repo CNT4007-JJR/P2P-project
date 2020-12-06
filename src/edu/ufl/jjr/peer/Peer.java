@@ -100,6 +100,23 @@ public class Peer{
         return true;
     }
 
+    public int getRequestIndex(int remotePeerId){
+        BitSet validPieces =  (BitSet)bitfield.clone();
+        validPieces.flip(0,bitfield.length());
+        validPieces.and(interestingPieces.get(remotePeerId));
+
+        List<Integer> validPieceIndex = new ArrayList<>();
+
+        for(int i = 0; i<validPieces.length(); i++){
+            if(validPieces.get(i) == true) validPieceIndex.add(i);
+        }
+
+        Collections.shuffle(validPieceIndex, new Random());
+
+        return validPieceIndex.get(0);
+
+    }
+
     public void setOut(ObjectOutputStream out){
         this.out = out;
     }

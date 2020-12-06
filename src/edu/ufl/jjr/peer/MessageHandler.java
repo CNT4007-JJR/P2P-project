@@ -7,9 +7,9 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
-import java.time.Instant;
+import java.util.Arrays;
 import java.util.BitSet;
 
 public class MessageHandler implements Runnable {
@@ -116,6 +116,13 @@ public class MessageHandler implements Runnable {
                 }
                 else if(message[4] == 1){
                     System.out.println("Received unchoke message from " + remotePeerId);
+                    //any logic needed for unchoking (reset timers etc)
+                    //calculate piece we want
+                    int requestPiece = peer.getRequestIndex(remotePeerId);
+                    System.out.println("Requesting Piece " + requestPiece);
+                    //create request message for piece we want
+                    //send request message
+                    peer.send(creator.requestMessage(requestPiece),out,remotePeerId);
                     System.out.println();
                 }
                 else if(message[4] == 2){
@@ -137,6 +144,11 @@ public class MessageHandler implements Runnable {
                 }
                 else if(message[4] == 6){
                     System.out.println("Received request message from " + remotePeerId);
+                    int pieceIndex = ByteBuffer.wrap(Arrays.copyOfRange(message, 5, 9)).order(ByteOrder.BIG_ENDIAN).getInt();
+                    System.out.println("Requested piece index is " + pieceIndex);
+                    byte [] data = peer.file[pieceIndex].clone();
+                    System.out.println("Sending the data " + new String(data));
+                    peer.send(creator.pieceMessage(pieceIndex,data),out,remotePeerId);
                     System.out.println();
                 }
                 else if(message[4] == 7){
@@ -151,6 +163,9 @@ public class MessageHandler implements Runnable {
                     System.arraycopy(message, 9, piece, 0, piece.length);
 
                     int pieceIndexInt = ByteBuffer.wrap(pieceIndex).getInt();
+
+                    //set this piece of the file
+                    peer.file[pieceIndexInt] = piece;
 
                     peer.peerManager.get(peer).updatePeerDownloadedBytes(piece.length);
 
