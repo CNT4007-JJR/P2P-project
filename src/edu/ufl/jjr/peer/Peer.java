@@ -40,6 +40,7 @@ public class Peer{
     public int numPieces;
     public BitSet bitfield;
     public int completedPeers;
+    public boolean hasFile;
 
 
     public Peer() throws FileNotFoundException {
@@ -88,6 +89,10 @@ public class Peer{
 
         if(containsFile == 1){
             this.bitfield.set(0,numPieces, true);
+            this.hasFile = true;
+        }else{
+            this.bitfield.clear(0,numPieces);
+            this.hasFile = false;
         }
 
         file = new byte[numPieces][];
@@ -99,6 +104,8 @@ public class Peer{
         BitSet validPieces =  (BitSet)bitfield.clone();
         validPieces.flip(0,numPieces);
         validPieces.and(interestingPieces.get(remotePeerId));
+
+        System.out.println(validPieces);
 
         List<Integer> validPieceIndex = new ArrayList<>();
 
@@ -161,6 +168,10 @@ public class Peer{
 
     public void updatePeerBitfield(int index) {
         this.bitfield.set(index, true);
+        if(this.bitfield.nextClearBit(0) == numPieces){
+            hasFile = true;
+            saveFileToDisk();
+        }
     }
 
     public void resetPeerDownloadedBytes() { this.downloadedBytes = 0;}
@@ -461,6 +472,32 @@ public class Peer{
         }
         catch(IOException ioException){
             ioException.printStackTrace();
+        }
+    }
+
+    public void saveFileToDisk() {
+        FileOutputStream fileOutputStream = null;
+        try {
+            fileOutputStream = new FileOutputStream(downloadFileName+peerID);
+            for(int i = 0; i<numPieces; i++){
+                fileOutputStream.write(file[i]);
+            }
+        } catch (FileNotFoundException fileNotFoundException) {
+            System.out.println("FileNotFoundException while saving downloaded file to disk.");
+            fileNotFoundException.printStackTrace();
+        } catch (IOException ioException) {
+            System.out.println("IOException while writing pieces to file.");
+            ioException.printStackTrace();
+        } finally {
+            if(fileOutputStream != null) {
+                try {
+                    fileOutputStream.flush();
+                    fileOutputStream.close();
+                } catch(IOException ioException) {
+                    System.out.println("IOException while closing file output stream");
+                    ioException.printStackTrace();
+                }
+            }
         }
     }
 
