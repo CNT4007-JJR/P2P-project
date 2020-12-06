@@ -102,7 +102,7 @@ public class Peer{
 
     public int getRequestIndex(int remotePeerId){
         BitSet validPieces =  (BitSet)bitfield.clone();
-        validPieces.flip(0,bitfield.length());
+        validPieces.flip(0,numPieces);
         validPieces.and(interestingPieces.get(remotePeerId));
 
         List<Integer> validPieceIndex = new ArrayList<>();
