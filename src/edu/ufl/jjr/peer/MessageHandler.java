@@ -164,14 +164,15 @@ public class MessageHandler implements Runnable {
 
                     int pieceIndexInt = ByteBuffer.wrap(pieceIndex).getInt();
 
-                    //set this piece of the file
+                    //"download" file piece
                     peer.file[pieceIndexInt] = piece;
+                    //set bitfield to indicate we now have this piece ( we will not request this piece)
 
                     peer.peerManager.get(peer).updatePeerDownloadedBytes(piece.length);
 
                     //Send have message?
 
-                    peer.peerManager.get(peer).updatePeerBitfield(pieceIndexInt);
+                    peer.updatePeerBitfield(pieceIndexInt);
 
                     System.out.println();
                 }
