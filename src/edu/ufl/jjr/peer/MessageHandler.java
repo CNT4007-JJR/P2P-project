@@ -38,7 +38,7 @@ public class MessageHandler implements Runnable {
         }
         //send handshake message
         peer.send(handshake, out, remotePeerId);
-        while(peer.completedPeers != peer.peerManager.size()){
+        while(peer.stopThread()){
             try {
                 byte [] message = (byte[])in.readObject();
 

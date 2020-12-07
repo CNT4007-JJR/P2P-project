@@ -8,6 +8,7 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 //import java.io.FileInputStream;
 //import java.io.InputStream;
@@ -172,11 +173,27 @@ public class Peer{
         );
     }
 
+    public boolean stopThread(){
+        boolean keepGoing = false;
+        for (Map.Entry<Integer, Peer> entry : this.peerManager.entrySet()) {
+            Integer k = entry.getKey();
+            Peer v = entry.getValue();
+            System.out.println("Peer ID: "+ k);
+            System.out.println("Does it have the file? " + v.hasFile);
+            if (!v.hasFile) {
+                keepGoing = true;
+                break;
+            }
+        }
+
+        System.out.println("Time to stop: " + !keepGoing);
+        return keepGoing;
+    }
+
     public void updatePeerBitfield(int index) {
         this.bitfield.set(index, true);
         if(this.bitfield.nextClearBit(0) == numPieces){
             hasFile = true;
-            setCompletedPeers();
             System.out.println("Completed peers: " + completedPeers);
             saveFileToDisk();
         }
@@ -192,7 +209,7 @@ public class Peer{
             @Override
             public void run() {
 
-                while(peerManager.get(peer).completedPeers != peerManager.size()){
+                while(stopThread()){
                     try {
                         preferredPeersSelection(interestedPeers, start[0]);
                         start[0] = Instant.now();
@@ -407,7 +424,7 @@ public class Peer{
             public void run() {
 
                 //We are gonna have to check when all the peers have completed their download to stop this thread
-                while(peerManager.get(peer).completedPeers != peerManager.size()) {
+                while(stopThread()) {
                     try {
                         peer.optimisticallyUnchokePeer(peer.getInterestedPeers());
                     } catch (IOException e) {

@@ -29,7 +29,7 @@ public class Server implements Runnable{
             e.printStackTrace();
         }
         try {
-            while (peer.completedPeers != peer.peerManager.size()) {
+            while (peer.stopThread()) {
                 socket = listener.accept();
 
                 out = new ObjectOutputStream(socket.getOutputStream());
