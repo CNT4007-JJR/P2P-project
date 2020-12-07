@@ -209,14 +209,17 @@ public class MessageHandler implements Runnable {
                     System.out.println("Received request message from " + remotePeerId);
                     int pieceIndex = ByteBuffer.wrap(Arrays.copyOfRange(message, 5, 9)).order(ByteOrder.BIG_ENDIAN).getInt();
                     System.out.println("Requested piece index is " + pieceIndex);
-                    byte [] data = peer.file[pieceIndex].clone();
-                    System.out.println("Sending the data " + new String(data));
-                    peer.send(creator.pieceMessage(pieceIndex,data),out,remotePeerId);
+                    if(peer.unchokedPeers.contains(remotePeerId)) {
+                        byte[] data = peer.file[pieceIndex].clone();
+                        System.out.println("Sending the data " + new String(data));
+                        peer.send(creator.pieceMessage(pieceIndex, data), out, remotePeerId);
+                    }else{
+                        System.out.println("This remote peer " + remotePeerId + " is choked");
+                    }
                     System.out.println();
                 }
                 else if(message[4] == 7){
-                    System.out.println("Received piece message from " + remotePeerId);
-
+                    
                     byte[] messageLength = new byte[4];
                     int messagePayloadLength = message.length - 5;
                     byte[] pieceIndex = new byte[4];
@@ -226,6 +229,7 @@ public class MessageHandler implements Runnable {
                     System.arraycopy(message, 9, piece, 0, piece.length);
 
                     int pieceIndexInt = ByteBuffer.wrap(pieceIndex).getInt();
+                    System.out.println("Received piece message from " + remotePeerId + "for index " + pieceIndexInt);
 
                     //"download" file piece
                     peer.file[pieceIndexInt] = piece;
@@ -245,6 +249,13 @@ public class MessageHandler implements Runnable {
                     });
 
                     peer.updatePeerBitfield(pieceIndexInt);
+                    if(!peer.hasFile) {
+                        int requestPiece = peer.getRequestIndex(remotePeerId);
+                        System.out.println("Requesting Piece after receiving piece request piece is " + requestPiece);
+                        //create request message for piece we want
+                        //send request message
+                        peer.send(creator.requestMessage(requestPiece), out, remotePeerId);
+                    }
 
                     System.out.println();
                 }
