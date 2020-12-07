@@ -146,7 +146,7 @@ public class MessageHandler implements Runnable {
                     System.out.println("Peer "+ remotePeerId + " now has piece: "+ pieceIndex);
 
                     peer.peerManager.get(remotePeerId).updatePeerBitfield(pieceIndex);
-
+                    if(peer.hasFile && peer.neighborsHaveFile()) System.exit(0);
                     BitSet updatedBitfield = peer.peerManager.get(remotePeerId).bitfield;
 
                     //Checking for equality between received bitfield and peer's bitfield, send not interested if equal
@@ -249,6 +249,7 @@ public class MessageHandler implements Runnable {
                     });
 
                     peer.updatePeerBitfield(pieceIndexInt);
+                    if(peer.hasFile && peer.neighborsHaveFile()) System.exit(0);
                     if(!peer.hasFile) {
                         int requestPiece = peer.getRequestIndex(remotePeerId);
                         System.out.println("Requesting Piece after receiving piece request piece is " + requestPiece);

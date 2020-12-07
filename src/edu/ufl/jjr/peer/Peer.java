@@ -174,6 +174,16 @@ public class Peer{
         }
     }
 
+    public boolean neighborsHaveFile(){
+        for(int id : interestingPieces.keySet()){
+            if(interestingPieces.get(id).nextClearBit(0) != numPieces){
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     public void resetPeerDownloadedBytes() { this.downloadedBytes = 0;}
 
     public void peerChokeTracker() {
