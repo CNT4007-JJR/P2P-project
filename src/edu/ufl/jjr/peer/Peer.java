@@ -229,10 +229,12 @@ public class Peer{
         peerManager.forEach((id,peerValues) -> {
             if(id != peerID){
                 int timeElapsed = Duration.between(startTime, finish).getNano();
-                double downloadRate = ((double) downloadedBytes/timeElapsed);
+                double downloadRate = ((double) peerValues.getDownloadedBytes()/timeElapsed);
                 candidatePeers.put(id, downloadRate);
             }
         });
+
+        resetPeerDownloadedBytes();
 
         //Create a list of all download rates, sort in ascending order
         Collection<Double> values = candidatePeers.values();
@@ -286,7 +288,6 @@ public class Peer{
                     removeUnchokedPeer(peer);
                 }
 
-
                 System.out.println();
 
             }
@@ -302,7 +303,6 @@ public class Peer{
                     System.out.println("Peer: "+ preferredNeighbors[i] +" selected as preferred neighbor!");
                 }
                 System.out.println();
-
 
                 for(int j = 0; j < preferredNeighbors.length; j++){
 
@@ -376,7 +376,6 @@ public class Peer{
                     if(!included && peer!=0){
                         System.out.println("Peer "+ peer + " has been choked!");
 
-
                         //Send choke message to the removed peer
                         send(creator.chokeMessage(), peerManager.get(peer).out, peer);
                         peersToChoke.add(peer);
@@ -388,12 +387,10 @@ public class Peer{
                 }
 
                 System.out.println();
-
             }
         }
 
     }
-
 
     public void startOptimisticallyUnchokingPeer() {
         Peer peer = this;
@@ -450,11 +447,10 @@ public class Peer{
         }
     }
 
-
     public void readFile(){
         if(containsFile == 1) {
             try {
-                byte[] allBytes = Files.readAllBytes(Paths.get(downloadFileName));
+                byte[] allBytes = Files.readAllBytes(Paths.get("./peer_"+peerID+"/"+downloadFileName));
                 for (int i = 0, j = 0; i < allBytes.length; i += pieceSize, j++) {
                     byte bytes[] = Arrays.copyOfRange(allBytes, i, i + pieceSize);
                     file[j] = bytes;
@@ -487,7 +483,12 @@ public class Peer{
     public void saveFileToDisk() {
         FileOutputStream fileOutputStream = null;
         try {
-            fileOutputStream = new FileOutputStream(downloadFileName+peerID);
+            File dir = new File("./peer_"+ peerID);
+            dir.mkdirs();
+            File fileLocation = new File(dir, downloadFileName);
+            fileLocation.createNewFile();
+            fileOutputStream = new FileOutputStream(fileLocation);
+
             for(int i = 0; i<numPieces; i++){
                 fileOutputStream.write(file[i]);
             }
@@ -509,6 +510,5 @@ public class Peer{
             }
         }
     }
-
 }
 
