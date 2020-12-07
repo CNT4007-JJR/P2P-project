@@ -170,8 +170,17 @@ public class Peer{
         this.bitfield.set(index, true);
         if(this.bitfield.nextClearBit(0) == numPieces){
             hasFile = true;
-            saveFileToDisk();
         }
+    }
+
+    public boolean neighborsHaveFile(){
+        for(int id : peerManager.keySet()){
+            if(peerManager.get(id).bitfield.nextClearBit(0) != numPieces){
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public void resetPeerDownloadedBytes() { this.downloadedBytes = 0;}

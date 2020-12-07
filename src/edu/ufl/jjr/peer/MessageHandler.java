@@ -39,6 +39,7 @@ public class MessageHandler implements Runnable {
         //send handshake message
         peer.send(handshake, out, remotePeerId);
         while(true){
+            if(peer.hasFile && peer.neighborsHaveFile()) System.exit(0);
             try {
                 byte [] message = (byte[])in.readObject();
 
@@ -50,6 +51,8 @@ public class MessageHandler implements Runnable {
                     System.arraycopy(message, 5, messagePayload, 0, message.length-5);
 
                     BitSet receivedBitfield  = BitSet.valueOf(messagePayload);
+
+                    peer.peerManager.get(remotePeerId).bitfield = (BitSet)receivedBitfield.clone();
 
                     System.out.println("Received bitfield value: " + receivedBitfield);
                     System.out.println();
@@ -116,13 +119,15 @@ public class MessageHandler implements Runnable {
                 }
                 else if(message[4] == 1){
                     System.out.println("Received unchoke message from " + remotePeerId);
-                    //any logic needed for unchoking (reset timers etc)
-                    //calculate piece we want
-                    int requestPiece = peer.getRequestIndex(remotePeerId);
-                    System.out.println("Requesting Piece " + requestPiece);
-                    //create request message for piece we want
-                    //send request message
-                    peer.send(creator.requestMessage(requestPiece),out,remotePeerId);
+                    if(!peer.hasFile) {
+                        //any logic needed for unchoking (reset timers etc)
+                        //calculate piece we want
+                        int requestPiece = peer.getRequestIndex(remotePeerId);
+                        System.out.println("Requesting Piece " + requestPiece);
+                        //create request message for piece we want
+                        //send request message
+                        peer.send(creator.requestMessage(requestPiece), out, remotePeerId);
+                    }
                     System.out.println();
                 }
                 else if(message[4] == 2){
@@ -141,6 +146,69 @@ public class MessageHandler implements Runnable {
                 else if(message[4] == 4){
                     System.out.println("Received have message from " + remotePeerId);
                     System.out.println();
+
+                    int pieceIndex = ByteBuffer.wrap(Arrays.copyOfRange(message, 5, 9)).order(ByteOrder.BIG_ENDIAN).getInt();
+                    System.out.println("Peer "+ remotePeerId + " now has piece: "+ pieceIndex);
+
+                    peer.peerManager.get(remotePeerId).updatePeerBitfield(pieceIndex);
+                    //if(peer.hasFile && peer.neighborsHaveFile()) System.exit(0);
+                    BitSet updatedBitfield = peer.peerManager.get(remotePeerId).bitfield;
+
+                    //Checking for equality between received bitfield and peer's bitfield, send not interested if equal
+                    if(peer.bitfield.equals(updatedBitfield)){
+                        System.out.println("Sending not interested message to peer " + remotePeerId);
+                        System.out.println();
+                        peer.send(creator.notInterestedMessage(), out, remotePeerId);
+                    }
+                    //Checking whether peer is empty, and received bitfield is not, send interested message if so.
+                    else if(peer.bitfield.isEmpty() && !updatedBitfield.isEmpty()){
+                        System.out.println("Original peer bitfield: " + peer.bitfield);
+                        System.out.println("Remote peer bitfield: " + updatedBitfield );
+
+                        BitSet interestingPieces = (BitSet) peer.bitfield.clone();
+                        interestingPieces.or(updatedBitfield);
+
+                        System.out.println("Interesting Pieces after or: " + interestingPieces);
+                        peer.updateInterestingPieces(remotePeerId, interestingPieces);
+
+                        System.out.println("Sending interested message to peer " + remotePeerId);
+                        System.out.println();
+                        peer.send(creator.interestedMessage(), out, remotePeerId);
+                    }
+                    /* Checking whether both received and peer bitfield are empty, send not interested message if so */
+                    else if(peer.bitfield.isEmpty() && updatedBitfield.isEmpty()){
+                        System.out.println("Original peer bitfield: " + peer.bitfield);
+                        System.out.println("Remote peer bitfield: " + updatedBitfield );
+
+                        System.out.println("Sending not interested message to peer " + remotePeerId);
+                        peer.send(creator.notInterestedMessage(), out, remotePeerId);
+
+                    }
+                    //If both the peer and received bitfield contain pieces, obtain the differences between the two and send interested message
+                    else{
+                        System.out.println("Original peer bitfield: " + peer.bitfield);
+                        System.out.println("Remote peer bitfield: " + updatedBitfield );
+
+                        BitSet interestingPieces = (BitSet) peer.bitfield.clone();
+                        interestingPieces.or(updatedBitfield);
+
+                        System.out.println("Interesting Pieces after or: " + interestingPieces);
+                        interestingPieces.xor(peer.bitfield);
+
+                        System.out.println("Interesting Pieces after xor: " + interestingPieces);
+                        peer.updateInterestingPieces(remotePeerId, interestingPieces);
+
+                        if(interestingPieces.isEmpty()){
+                            System.out.println("Sending not interested message to peer: " + remotePeerId);
+                            peer.send(creator.notInterestedMessage(), out, remotePeerId);
+                        }
+                        else{
+                            System.out.println("Sending interested message to peer: " + remotePeerId);
+                            peer.send(creator.interestedMessage(), out, remotePeerId);
+                        }
+
+                    }
+
                 }
                 else if(message[4] == 6){
                     System.out.println("Received request message from " + remotePeerId);
@@ -173,16 +241,27 @@ public class MessageHandler implements Runnable {
                     //set bitfield to indicate we now have this piece ( we will not request this piece)
 
                     peer.peerManager.get(peer.peerID).updatePeerDownloadedBytes(piece.length);
-
-                    //Send have message?
-
                     peer.updatePeerBitfield(pieceIndexInt);
+                    //Send have message?
+                    peer.peerManager.forEach((k,v) ->{
+                        if(k != peer.peerID){
+                            try {
+                                peer.send(creator.haveMessage(pieceIndexInt), out, k );
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    });
+
+                    //if(peer.hasFile && peer.neighborsHaveFile()) System.exit(0);
                     if(!peer.hasFile) {
                         int requestPiece = peer.getRequestIndex(remotePeerId);
                         System.out.println("Requesting Piece after receiving piece request piece is " + requestPiece);
                         //create request message for piece we want
                         //send request message
                         peer.send(creator.requestMessage(requestPiece), out, remotePeerId);
+                    }else{
+                        peer.saveFileToDisk();
                     }
 
                     System.out.println();
@@ -205,6 +284,7 @@ public class MessageHandler implements Runnable {
                 }
 
             } catch (IOException e) {
+                System.exit(0);
                 e.printStackTrace();
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
