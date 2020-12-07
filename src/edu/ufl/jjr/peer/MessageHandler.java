@@ -119,13 +119,15 @@ public class MessageHandler implements Runnable {
                 }
                 else if(message[4] == 1){
                     System.out.println("Received unchoke message from " + remotePeerId);
-                    //any logic needed for unchoking (reset timers etc)
-                    //calculate piece we want
-                    int requestPiece = peer.getRequestIndex(remotePeerId);
-                    System.out.println("Requesting Piece " + requestPiece);
-                    //create request message for piece we want
-                    //send request message
-                    peer.send(creator.requestMessage(requestPiece),out,remotePeerId);
+                    if(!peer.hasFile) {
+                        //any logic needed for unchoking (reset timers etc)
+                        //calculate piece we want
+                        int requestPiece = peer.getRequestIndex(remotePeerId);
+                        System.out.println("Requesting Piece " + requestPiece);
+                        //create request message for piece we want
+                        //send request message
+                        peer.send(creator.requestMessage(requestPiece), out, remotePeerId);
+                    }
                     System.out.println();
                 }
                 else if(message[4] == 2){
@@ -282,6 +284,7 @@ public class MessageHandler implements Runnable {
                 }
 
             } catch (IOException e) {
+                System.exit(0);
                 e.printStackTrace();
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
