@@ -39,6 +39,7 @@ public class MessageHandler implements Runnable {
         //send handshake message
         peer.send(handshake, out, remotePeerId);
         while(true){
+            if(peer.hasFile && peer.neighborsHaveFile()) System.exit(0);
             try {
                 byte [] message = (byte[])in.readObject();
 
@@ -50,6 +51,8 @@ public class MessageHandler implements Runnable {
                     System.arraycopy(message, 5, messagePayload, 0, message.length-5);
 
                     BitSet receivedBitfield  = BitSet.valueOf(messagePayload);
+
+                    peer.peerManager.get(remotePeerId).bitfield = (BitSet)receivedBitfield.clone();
 
                     System.out.println("Received bitfield value: " + receivedBitfield);
                     System.out.println();
@@ -146,7 +149,7 @@ public class MessageHandler implements Runnable {
                     System.out.println("Peer "+ remotePeerId + " now has piece: "+ pieceIndex);
 
                     peer.peerManager.get(remotePeerId).updatePeerBitfield(pieceIndex);
-                    if(peer.hasFile && peer.neighborsHaveFile()) System.exit(0);
+                    //if(peer.hasFile && peer.neighborsHaveFile()) System.exit(0);
                     BitSet updatedBitfield = peer.peerManager.get(remotePeerId).bitfield;
 
                     //Checking for equality between received bitfield and peer's bitfield, send not interested if equal
@@ -236,7 +239,7 @@ public class MessageHandler implements Runnable {
                     //set bitfield to indicate we now have this piece ( we will not request this piece)
 
                     peer.peerManager.get(peer.peerID).updatePeerDownloadedBytes(piece.length);
-
+                    peer.updatePeerBitfield(pieceIndexInt);
                     //Send have message?
                     peer.peerManager.forEach((k,v) ->{
                         if(k != peer.peerID){
@@ -248,14 +251,15 @@ public class MessageHandler implements Runnable {
                         }
                     });
 
-                    peer.updatePeerBitfield(pieceIndexInt);
-                    if(peer.hasFile && peer.neighborsHaveFile()) System.exit(0);
+                    //if(peer.hasFile && peer.neighborsHaveFile()) System.exit(0);
                     if(!peer.hasFile) {
                         int requestPiece = peer.getRequestIndex(remotePeerId);
                         System.out.println("Requesting Piece after receiving piece request piece is " + requestPiece);
                         //create request message for piece we want
                         //send request message
                         peer.send(creator.requestMessage(requestPiece), out, remotePeerId);
+                    }else{
+                        peer.saveFileToDisk();
                     }
 
                     System.out.println();
