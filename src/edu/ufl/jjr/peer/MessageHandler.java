@@ -38,7 +38,7 @@ public class MessageHandler implements Runnable {
         }
         //send handshake message
         peer.send(handshake, out, remotePeerId);
-        while(true){
+        while(peer.completedPeers != peer.peerManager.size()){
             try {
                 byte [] message = (byte[])in.readObject();
 
@@ -174,7 +174,7 @@ public class MessageHandler implements Runnable {
                     System.arraycopy(message, 9, piece, 0, piece.length);
 
                     int pieceIndexInt = ByteBuffer.wrap(pieceIndex).getInt();
-                    System.out.println("Received piece message from " + remotePeerId + "for index " + pieceIndexInt);
+                    System.out.println("Received piece message from " + remotePeerId + " for index " + pieceIndexInt);
 
                     //"download" file piece
                     peer.file[pieceIndexInt] = piece;

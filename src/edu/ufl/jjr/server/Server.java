@@ -29,7 +29,7 @@ public class Server implements Runnable{
             e.printStackTrace();
         }
         try {
-            while (true) {
+            while (peer.completedPeers != peer.peerManager.size()) {
                 socket = listener.accept();
 
                 out = new ObjectOutputStream(socket.getOutputStream());
@@ -39,12 +39,10 @@ public class Server implements Runnable{
 
                 //create message handler this will handle dealing with incoming messages as well as sending responses to messages
                 MessageHandler handler = new MessageHandler(in, out, peer, socket); //(assuming we want peer and socket maybe not needed?)
-//                peer.setOut(out);
 
                 //start handler on thread
                 Thread serverThread = new Thread(handler);
                 serverThread.start();
-
 
             }
             

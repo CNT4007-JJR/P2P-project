@@ -70,7 +70,7 @@ public class Peer{
         fileSize = Integer.parseInt(configVariables.get(4));
         pieceSize = Integer.parseInt(configVariables.get(5));
         numPieces = (int) Math.ceil((double)fileSize/pieceSize);
-        completedPeers = 1;
+        completedPeers = 0;
 
         return true;
     }
@@ -166,10 +166,18 @@ public class Peer{
         this.downloadedBytes += bytes;
     }
 
+    public void setCompletedPeers(){
+        this.peerManager.forEach((k,v) ->
+                v.completedPeers++
+        );
+    }
+
     public void updatePeerBitfield(int index) {
         this.bitfield.set(index, true);
         if(this.bitfield.nextClearBit(0) == numPieces){
             hasFile = true;
+            setCompletedPeers();
+            System.out.println("Completed peers: " + completedPeers);
             saveFileToDisk();
         }
     }
@@ -183,7 +191,8 @@ public class Peer{
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
-                while(completedPeers != peerManager.size()){
+
+                while(peerManager.get(peer).completedPeers != peerManager.size()){
                     try {
                         preferredPeersSelection(interestedPeers, start[0]);
                         start[0] = Instant.now();
@@ -197,6 +206,8 @@ public class Peer{
         });
 
         thread.start();
+
+
     }
 
     //Helper function for preferredPeerSelection, returns random peer id based on download rate value passed in
@@ -220,10 +231,12 @@ public class Peer{
         peerManager.forEach((id,peerValues) -> {
             if(id != peerID){
                 int timeElapsed = Duration.between(startTime, finish).getNano();
-                double downloadRate = ((double) downloadedBytes/timeElapsed);
+                double downloadRate = ((double) getDownloadedBytes()/timeElapsed);
                 candidatePeers.put(id, downloadRate);
             }
         });
+
+        resetPeerDownloadedBytes();
 
         //Create a list of all download rates, sort in ascending order
         Collection<Double> values = candidatePeers.values();
@@ -394,7 +407,7 @@ public class Peer{
             public void run() {
 
                 //We are gonna have to check when all the peers have completed their download to stop this thread
-                while(completedPeers != peerManager.size()) {
+                while(peerManager.get(peer).completedPeers != peerManager.size()) {
                     try {
                         peer.optimisticallyUnchokePeer(peer.getInterestedPeers());
                     } catch (IOException e) {
@@ -439,8 +452,7 @@ public class Peer{
         }
         else{
             interestingPieces.put(peerID, pieces);
-        }
-    }
+        }    }
 
 
     public void readFile(){
