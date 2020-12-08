@@ -1,4 +1,5 @@
 package edu.ufl.jjr.peer;
+import edu.ufl.jjr.writingLog.WritingLog;
 
 import edu.ufl.jjr.MessageCreator.MessageCreator;
 
@@ -29,7 +30,6 @@ public class Peer{
     public int downloadedBytes;
     public List<Integer> unchokedPeers;
 
-
     //Common properties known by all peers, based off Common.cfg file
     public int numOfPreferredNeighbors;
     public int unchokingInterval;
@@ -39,8 +39,9 @@ public class Peer{
     public int pieceSize;
     public int numPieces;
     public BitSet bitfield;
-    public int completedPeers;
+    public int numPiecesDownloaded;
     public boolean hasFile;
+    public WritingLog logger;
 
 
     public Peer() throws FileNotFoundException {
@@ -70,7 +71,6 @@ public class Peer{
         fileSize = Integer.parseInt(configVariables.get(4));
         pieceSize = Integer.parseInt(configVariables.get(5));
         numPieces = (int) Math.ceil((double)fileSize/pieceSize);
-        completedPeers = 1;
 
         return true;
     }
@@ -86,9 +86,11 @@ public class Peer{
         this.bitfield = new BitSet(numPieces);
         this.creator = new MessageCreator();
         this.downloadedBytes = 0;
+        this.numPiecesDownloaded = 0;
 
         if(containsFile == 1){
             this.bitfield.set(0,numPieces, true);
+            this.numPiecesDownloaded = numPieces;
             this.hasFile = true;
         }else{
             this.bitfield.clear(0,numPieces);
@@ -123,9 +125,13 @@ public class Peer{
         this.out = out;
     }
 
+    public void incrementNumPiecesDownloaded(){
+        this.numPiecesDownloaded += 1;
+    }
+
     public void addInterestedPeer(int peerID) {
         if(interestedPeers.contains(peerID)){
-            System.out.println("Peer labeled as interested.");
+            //System.out.println("Peer labeled as interested.");
         }
         else{
             interestedPeers.add(peerID);
@@ -136,12 +142,14 @@ public class Peer{
             interestedPeers.remove(new Integer(peerID));
         }
         else{
-            System.out.println("Peer has been labeled as not interested.");
+            //System.out.println("Peer has been labeled as not interested.");
         }
     }
 
     public void setPeerManager(Hashtable<Integer, Peer> peerManager){
         this.peerManager = peerManager;
+        this.logger = new WritingLog(peerManager.get(peerID));
+
     }
 
     public void addUnchokedPeer(int peerID){
@@ -192,7 +200,7 @@ public class Peer{
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
-                while(completedPeers != peerManager.size()){
+                while(true){
                     try {
                         preferredPeersSelection(interestedPeers, start[0]);
                         start[0] = Instant.now();
@@ -244,13 +252,15 @@ public class Peer{
         if(interestedPeers.size() != 0){
             //If the number of interested peers is less than the preferred neighbor limit, just select all interested peers
             if(interestedPeers.size() <= preferredNeighbors.length){
-                System.out.println("All interested peers fit within preferredNeighbors requirement!");
-                System.out.println("Size of interested peers: "+ interestedPeers.size());
+                //System.out.println("All interested peers fit within preferredNeighbors requirement!");
+                //System.out.println("Size of interested peers: "+ interestedPeers.size());
 
                 for(int i = 0; i < interestedPeers.size(); i++){
                     preferredNeighbors[i] = interestedPeers.get(i);
-                    System.out.println("Peer: "+ preferredNeighbors[i] +" selected as preferred neighbor!");
+                    //System.out.println("Peer: "+ preferredNeighbors[i] +" selected as preferred neighbor!");
                 }
+
+                logger.changeNeighbors(peerID, preferredNeighbors);
 
                 for(int j = 0; j < preferredNeighbors.length; j++){
 
@@ -265,7 +275,7 @@ public class Peer{
 
                 //Remove any peer from the unchokedPeers list if they are not part of the preferred peers array, send choke message
                 for (int peer: unchokedPeers) {
-                    System.out.println("Unchoked peer: " + peer);
+                    //System.out.println("Unchoked peer: " + peer);
                     boolean included = false;
                     for (int neighbor: preferredNeighbors) {
                         if (neighbor == peer) {
@@ -274,9 +284,9 @@ public class Peer{
                         }
                     }
 
-                    System.out.println("Peer inclusion: " + included);
+                    //System.out.println("Peer inclusion: " + included);
                     if(!included && peer!=0){
-                        System.out.println("Peer "+ peer + " has been choked!");
+                        //System.out.println("Peer "+ peer + " has been choked!");
                         
                         //Send choke message to the removed peer
                         send(creator.chokeMessage(), peerManager.get(peer).out, peer);
@@ -292,17 +302,18 @@ public class Peer{
 
             }
             else if(containsFile == 1){
-                System.out.println("Peer contains full file, randomly select peers.");
-                System.out.println();
+                //System.out.println("Peer contains full file, randomly select peers.");
+                //System.out.println();
                 //Randomly select preferred peers based on those that are interested
                 Collections.shuffle(interestedPeers, new Random());
 
-                System.out.println();
+                //System.out.println();
                 for(int i = 0; i < preferredNeighbors.length; i++){
                     preferredNeighbors[i] = interestedPeers.get(i);
-                    System.out.println("Peer: "+ preferredNeighbors[i] +" selected as preferred neighbor!");
+                    //System.out.println("Peer: "+ preferredNeighbors[i] +" selected as preferred neighbor!");
                 }
-                System.out.println();
+
+                logger.changeNeighbors(peerID, preferredNeighbors);
 
                 for(int j = 0; j < preferredNeighbors.length; j++){
 
@@ -317,7 +328,7 @@ public class Peer{
 
                 //Remove any peer from the unchokedPeers list if they are not part of the preferred peers array, send choke message
                 for (int peer: unchokedPeers) {
-                    System.out.println(unchokedPeers.size());
+                    //System.out.println(unchokedPeers.size());
                     boolean included = false;
                     for (int neighbor: preferredNeighbors) {
                         if (neighbor == peer) {
@@ -327,7 +338,7 @@ public class Peer{
                     }
 
                     if(!included && peer!=0){
-                        System.out.println("Peer "+ peer + " has been choked!");
+                        //System.out.println("Peer "+ peer + " has been choked!");
 
                         //Send choke message to the removed peer
                         send(creator.chokeMessage(), peerManager.get(peer).out, peer);
@@ -339,7 +350,7 @@ public class Peer{
                     removeUnchokedPeer(peer);
                 }
 
-                System.out.println();
+                //System.out.println();
 
             } else  {
                 for(int i = 0; i < preferredNeighbors.length; i++){
@@ -351,7 +362,8 @@ public class Peer{
                     }
                     listOfValues.remove(listOfValues.size()-1);
                 }
-                System.out.println();
+
+                logger.changeNeighbors(peerID, preferredNeighbors);
 
                 //Check whether the preferredNeighbor ID is part of the unchoked peers already, add if not
                 for(int j = 0; j < preferredNeighbors.length; j++){
@@ -374,7 +386,7 @@ public class Peer{
                     }
 
                     if(!included && peer!=0){
-                        System.out.println("Peer "+ peer + " has been choked!");
+                        //System.out.println("Peer "+ peer + " has been choked!");
 
                         //Send choke message to the removed peer
                         send(creator.chokeMessage(), peerManager.get(peer).out, peer);
@@ -386,7 +398,6 @@ public class Peer{
                     removeUnchokedPeer(peer);
                 }
 
-                System.out.println();
             }
         }
 
@@ -399,7 +410,7 @@ public class Peer{
             public void run() {
 
                 //We are gonna have to check when all the peers have completed their download to stop this thread
-                while(completedPeers != peerManager.size()) {
+                while(true) {
                     try {
                         peer.optimisticallyUnchokePeer(peer.getInterestedPeers());
                     } catch (IOException e) {
@@ -427,6 +438,7 @@ public class Peer{
         if(!candidatePeers.isEmpty()) {
             Collections.shuffle(candidatePeers, new Random());
             int optimisticallyUnchokedPeerId = candidatePeers.get(0);
+            logger.optimisticUnchoke(peerID, optimisticallyUnchokedPeerId);
             send(creator.unchokeMessage(), peerManager.get(optimisticallyUnchokedPeerId).out, optimisticallyUnchokedPeerId);
             this.optimisticallyUnchockedPeer = optimisticallyUnchokedPeerId;
         }
@@ -460,7 +472,7 @@ public class Peer{
                 ioException.printStackTrace();
             }
         }
-        System.out.println("TheFile.dat byte array: " + Arrays.deepToString(file));
+        //System.out.println("TheFile.dat byte array: " + Arrays.deepToString(file));
     }
 
     public void send(byte [] msg, ObjectOutputStream outputStream, int remotePeerId){
@@ -468,10 +480,10 @@ public class Peer{
             outputStream.writeObject(msg);
             outputStream.flush();
             if(remotePeerId == 0){
-                System.out.println("Sending initial handshake message: " + msg + " from Peer " + peerID);
+                //System.out.println("Sending initial handshake message: " + msg + " from Peer " + peerID);
             }
             else{
-                System.out.println("Sending message: " + msg + " from Peer " + peerID +" to Peer " + remotePeerId);
+                //System.out.println("Sending message: " + msg + " from Peer " + peerID +" to Peer " + remotePeerId);
             }
             System.out.println();
         }
