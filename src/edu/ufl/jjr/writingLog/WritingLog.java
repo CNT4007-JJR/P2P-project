@@ -63,11 +63,11 @@ public class WritingLog {
     }
 
     public void sentPieceMessage(int peerID_1, int peerID_2, int pieceIndex){
-        logger.info(time() + "Peer "+ peerID_1 + "sent piece "+ pieceIndex+ " to Peer "+ peerID_2 + ".");
+        logger.info(time() + "Peer "+ peerID_1 + " sent piece "+ pieceIndex+ " to Peer "+ peerID_2 + ".");
     }
 
     public void receivedPieceMessage(int peerID_1, int peerID_2, int pieceIndex){
-        logger.info(time()+"Peer "+ peerID_1 + "received piece " + pieceIndex +" from Peer " + peerID_2 + ".");
+        logger.info(time()+"Peer "+ peerID_1 + " received piece " + pieceIndex +" from Peer " + peerID_2 + ".");
     }
 
     public void receivedBitfieldFromPeer(int peerID_1, int peerID_2){

@@ -107,7 +107,7 @@ public class Peer{
         validPieces.flip(0,numPieces);
         validPieces.and(interestingPieces.get(remotePeerId));
 
-        System.out.println(validPieces);
+        //System.out.println(validPieces);
 
         List<Integer> validPieceIndex = new ArrayList<>();
 
@@ -178,6 +178,7 @@ public class Peer{
         this.bitfield.set(index, true);
         if(this.bitfield.nextClearBit(0) == numPieces){
             hasFile = true;
+            containsFile = 1;
         }
     }
 
@@ -237,10 +238,13 @@ public class Peer{
         peerManager.forEach((id,peerValues) -> {
             if(id != peerID){
                 int timeElapsed = Duration.between(startTime, finish).getNano();
-                double downloadRate = ((double) peerValues.getDownloadedBytes()/timeElapsed);
+                double downloadRate = ((double) peerValues.downloadedBytes/timeElapsed);
                 candidatePeers.put(id, downloadRate);
             }
         });
+
+        System.out.println("Download Rate Testing!");
+        System.out.println(candidatePeers.toString());
 
         resetPeerDownloadedBytes();
 
@@ -252,6 +256,7 @@ public class Peer{
         if(interestedPeers.size() != 0){
             //If the number of interested peers is less than the preferred neighbor limit, just select all interested peers
             if(interestedPeers.size() <= preferredNeighbors.length){
+                System.out.println("NOT ENOUGH INTERESTED PEERS TO FILL NEIGHBORS");
                 //System.out.println("All interested peers fit within preferredNeighbors requirement!");
                 //System.out.println("Size of interested peers: "+ interestedPeers.size());
 
@@ -298,10 +303,11 @@ public class Peer{
                     removeUnchokedPeer(peer);
                 }
 
-                System.out.println();
+                //System.out.println();
 
             }
             else if(containsFile == 1){
+                System.out.println("PEER CONTAINS FILE");
                 //System.out.println("Peer contains full file, randomly select peers.");
                 //System.out.println();
                 //Randomly select preferred peers based on those that are interested
@@ -353,6 +359,7 @@ public class Peer{
                 //System.out.println();
 
             } else  {
+                System.out.println("HERE FOR DOWNLOAD RATE!");
                 for(int i = 0; i < preferredNeighbors.length; i++){
                     if(interestedPeers.contains(getKey(candidatePeers, listOfValues.get(listOfValues.size()-1)))){
                         System.out.println("Max Download Rate Value: "+ listOfValues.get(listOfValues.size()-1));
@@ -472,7 +479,7 @@ public class Peer{
                 ioException.printStackTrace();
             }
         }
-        //System.out.println("TheFile.dat byte array: " + Arrays.deepToString(file));
+        //System.out.println("byte array: " + Arrays.deepToString(file));
     }
 
     public void send(byte [] msg, ObjectOutputStream outputStream, int remotePeerId){
@@ -485,7 +492,7 @@ public class Peer{
             else{
                 //System.out.println("Sending message: " + msg + " from Peer " + peerID +" to Peer " + remotePeerId);
             }
-            System.out.println();
+            //System.out.println();
         }
         catch(IOException ioException){
             ioException.printStackTrace();

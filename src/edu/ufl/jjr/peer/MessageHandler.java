@@ -172,10 +172,10 @@ public class MessageHandler implements Runnable {
                 }
                 else if(message[4] == 4){
                     /*Test Print Statements:
+                    * System.out.println("Peer "+ remotePeerId + " now has piece: "+ pieceIndex);
                     * System.out.println("Received have message from " + remotePeerId); */
 
                     int pieceIndex = ByteBuffer.wrap(Arrays.copyOfRange(message, 5, 9)).order(ByteOrder.BIG_ENDIAN).getInt();
-                    System.out.println("Peer "+ remotePeerId + " now has piece: "+ pieceIndex);
 
                     logger.receivesHave(peer.peerID, remotePeerId, pieceIndex);
 
@@ -301,7 +301,7 @@ public class MessageHandler implements Runnable {
                     logger.finishedDownloadingPiece(peer.peerID, remotePeerId, pieceIndexInt, peer.numPiecesDownloaded);
 
                     //Set bitfield to indicate we now have this piece ( we will not request this piece)
-                    peer.peerManager.get(peer.peerID).updatePeerDownloadedBytes(piece.length);
+                    peer.peerManager.get(remotePeerId).updatePeerDownloadedBytes(piece.length);
                     peer.updatePeerBitfield(pieceIndexInt);
 
                     peer.peerManager.forEach((k,v) ->{
