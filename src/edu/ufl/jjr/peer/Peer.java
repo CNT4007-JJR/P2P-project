@@ -29,6 +29,7 @@ public class Peer{
     public int optimisticallyUnchockedPeer;
     public int downloadedBytes;
     public List<Integer> unchokedPeers;
+    double downloadRate;
 
     //Common properties known by all peers, based off Common.cfg file
     public int numOfPreferredNeighbors;
@@ -47,6 +48,8 @@ public class Peer{
     public Peer() throws FileNotFoundException {
         this.optimisticallyUnchockedPeer = 0;
         this.unchokedPeers = new ArrayList<>();
+        this.downloadRate = 0;
+        this.downloadedBytes = 0;
         readCommonConfig();
     }
 
@@ -171,6 +174,7 @@ public class Peer{
     }
 
     public void updatePeerDownloadedBytes(int bytes){
+        System.out.println("Byte amount to increment by: " + bytes);
         this.downloadedBytes += bytes;
     }
 
@@ -237,9 +241,10 @@ public class Peer{
         //For each peer (neighbor) in peerManager, except for itself, calculate the download rate
         peerManager.forEach((id,peerValues) -> {
             if(id != peerID){
-                int timeElapsed = Duration.between(startTime, finish).getNano();
-                double downloadRate = ((double) peerValues.downloadedBytes/timeElapsed);
-                candidatePeers.put(id, downloadRate);
+                    int timeElapsed = Duration.between(startTime, finish).getNano();
+                    System.out.println("id: " + id+ " bytes: " +peerValues.downloadedBytes);
+                    peerValues.downloadRate = ((double) peerValues.downloadedBytes / timeElapsed);
+                candidatePeers.put(id, peerValues.downloadRate);
             }
         });
 
