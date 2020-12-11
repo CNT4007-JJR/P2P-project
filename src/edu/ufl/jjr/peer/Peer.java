@@ -169,10 +169,6 @@ public class Peer{
         return interestedPeers;
     }
 
-    public int getDownloadedBytes() {
-        return downloadedBytes;
-    }
-
     public void updatePeerDownloadedBytes(int bytes){
         System.out.println("Byte amount to increment by: " + bytes);
         this.downloadedBytes += bytes;
@@ -242,14 +238,11 @@ public class Peer{
         peerManager.forEach((id,peerValues) -> {
             if(id != peerID){
                     int timeElapsed = Duration.between(startTime, finish).getNano();
-                    System.out.println("id: " + id+ " bytes: " +peerValues.downloadedBytes);
+                    //System.out.println("id: " + id+ " bytes: " +peerValues.downloadedBytes);
                     peerValues.downloadRate = ((double) peerValues.downloadedBytes / timeElapsed);
                 candidatePeers.put(id, peerValues.downloadRate);
             }
         });
-
-        System.out.println("Download Rate Testing!");
-        System.out.println(candidatePeers.toString());
 
         resetPeerDownloadedBytes();
 
@@ -312,7 +305,7 @@ public class Peer{
 
             }
             else if(containsFile == 1){
-                System.out.println("PEER CONTAINS FILE");
+                //System.out.println("PEER CONTAINS FILE");
                 //System.out.println("Peer contains full file, randomly select peers.");
                 //System.out.println();
                 //Randomly select preferred peers based on those that are interested
@@ -364,7 +357,8 @@ public class Peer{
                 //System.out.println();
 
             } else  {
-                System.out.println("HERE FOR DOWNLOAD RATE!");
+               System.out.println("HERE FOR DOWNLOAD RATE!");
+               // System.out.println(preferredNeighbors.length);
                 for(int i = 0; i < preferredNeighbors.length; i++){
                     if(interestedPeers.contains(getKey(candidatePeers, listOfValues.get(listOfValues.size()-1)))){
                         System.out.println("Max Download Rate Value: "+ listOfValues.get(listOfValues.size()-1));

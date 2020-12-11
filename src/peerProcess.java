@@ -54,8 +54,22 @@ public class peerProcess {
         serverThread.start();
 
         //System.out.println("Started Server for Peer" + peerID);
-        logger.setInitialVariables(peerID, peers.get(peerID).bitfield, peers.get(peerID).hostName, peers.get(peerID).portNumber, peers.get(peerID).containsFile);
+        logger.setInitialVariables(
+                peerID,
+                peers.get(peerID).bitfield,
+                peers.get(peerID).hostName,
+                peers.get(peerID).portNumber,
+                peers.get(peerID).containsFile);
 
+        logger.setCommonVariables(
+                peers.get(peerID).numOfPreferredNeighbors,
+                peers.get(peerID).unchokingInterval,
+                peers.get(peerID).optimisticUnchokingInterval,
+                peers.get(peerID).downloadFileName,
+                peers.get(peerID).fileSize,
+                peers.get(peerID).pieceSize,
+                peers.get(peerID).numPieces
+        );
 
         Iterator peersIterator = peers.entrySet().iterator();
 

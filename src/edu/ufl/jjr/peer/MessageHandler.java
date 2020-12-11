@@ -46,7 +46,7 @@ public class MessageHandler implements Runnable {
                 byte [] message = (byte[])in.readObject();
 
                 if(message[4] == 5){
-                    logger.receivedBitfieldFromPeer(peer.peerID, remotePeerId);
+                    //logger.receivedBitfieldFromPeer(peer.peerID, remotePeerId);
 
                     /*Test Print Statements:
                     * System.out.println("Peer "+ peer.peerID +" received bitfield message from Peer " + remotePeerId);
@@ -62,7 +62,7 @@ public class MessageHandler implements Runnable {
 
                     //Checking for equality between received bitfield and peer's bitfield, send not interested if equal
                     if(peer.bitfield.equals(receivedBitfield)){
-                        logger.sentNotInterestedMessage(peer.peerID, remotePeerId);
+                        //logger.sentNotInterestedMessage(peer.peerID, remotePeerId);
                         /*Test Print Statement:
                         *  System.out.println("Sending not interested message to peer " + remotePeerId);*/
 
@@ -82,7 +82,7 @@ public class MessageHandler implements Runnable {
 
                         peer.updateInterestingPieces(remotePeerId, interestingPieces);
 
-                        logger.sentInterestedMessage(peer.peerID, remotePeerId);
+                        //logger.sentInterestedMessage(peer.peerID, remotePeerId);
                         peer.send(creator.interestedMessage(), out, remotePeerId);
                     }
                     /* Checking whether both received and peer bitfield are empty, send not interested message if so */
@@ -93,7 +93,7 @@ public class MessageHandler implements Runnable {
                         * System.out.println("Remote peer bitfield: " + receivedBitfield );
                         * System.out.println("Sending not interested message to peer " + remotePeerId); */
 
-                        logger.sentNotInterestedMessage(peer.peerID, remotePeerId);
+                        //logger.sentNotInterestedMessage(peer.peerID, remotePeerId);
                         peer.send(creator.notInterestedMessage(), out, remotePeerId);
 
                     }
@@ -116,14 +116,14 @@ public class MessageHandler implements Runnable {
                             /*Test Print Statement:
                             * System.out.println("Sending not interested message to peer: " + remotePeerId); */
 
-                            logger.sentNotInterestedMessage(peer.peerID, remotePeerId);
+                            //logger.sentNotInterestedMessage(peer.peerID, remotePeerId);
                             peer.send(creator.notInterestedMessage(), out, remotePeerId);
                         }
                         else{
                             /*Test Print Statement:
                             * System.out.println("Sending interested message to peer: " + remotePeerId); */
 
-                            logger.sentInterestedMessage(peer.peerID, remotePeerId);
+                            //logger.sentInterestedMessage(peer.peerID, remotePeerId);
                             peer.send(creator.interestedMessage(), out, remotePeerId);
                         }
 
@@ -149,7 +149,7 @@ public class MessageHandler implements Runnable {
                         /*Test Print Statements:
                          * System.out.println("Requesting Piece " + requestPiece); */
 
-                        logger.requestedPieceFrom(peer.peerID, remotePeerId, requestPiece);
+                        //logger.requestedPieceFrom(peer.peerID, remotePeerId, requestPiece);
 
                         //Create and send a request message for the piece we want
                         peer.send(creator.requestMessage(requestPiece), out, remotePeerId);
@@ -188,7 +188,7 @@ public class MessageHandler implements Runnable {
                         /*Test Print Statements:
                         * System.out.println("Sending not interested message to peer " + remotePeerId); */
 
-                        logger.sentNotInterestedMessage(peer.peerID, remotePeerId);
+                        //logger.sentNotInterestedMessage(peer.peerID, remotePeerId);
                         peer.send(creator.notInterestedMessage(), out, remotePeerId);
                     }
                     //Checking whether peer is empty, and received bitfield is not, send interested message if so.
@@ -207,7 +207,7 @@ public class MessageHandler implements Runnable {
                         peer.updateInterestingPieces(remotePeerId, interestingPieces);
 
 
-                        logger.sentInterestedMessage(peer.peerID, remotePeerId);
+                        //logger.sentInterestedMessage(peer.peerID, remotePeerId);
                         peer.send(creator.interestedMessage(), out, remotePeerId);
                     }
                     /* Checking whether both received and peer bitfield are empty, send not interested message if so */
@@ -218,7 +218,7 @@ public class MessageHandler implements Runnable {
                         * System.out.println("Remote peer bitfield: " + updatedBitfield );
                         * System.out.println("Sending not interested message to peer " + remotePeerId); * */
 
-                        logger.sentNotInterestedMessage(peer.peerID, remotePeerId);
+                        //logger.sentNotInterestedMessage(peer.peerID, remotePeerId);
                         peer.send(creator.notInterestedMessage(), out, remotePeerId);
 
                     }
@@ -243,14 +243,14 @@ public class MessageHandler implements Runnable {
                             /*Test Print Statement:
                             * System.out.println("Sending not interested message to peer: " + remotePeerId); */
 
-                            logger.sentNotInterestedMessage(peer.peerID, remotePeerId);
+                            //logger.sentNotInterestedMessage(peer.peerID, remotePeerId);
                             peer.send(creator.notInterestedMessage(), out, remotePeerId);
                         }
                         else{
                             /*Test Print Statement:
                             * System.out.println("Sending interested message to peer: " + remotePeerId); */
 
-                            logger.sentInterestedMessage(peer.peerID, remotePeerId);
+                            //logger.sentInterestedMessage(peer.peerID, remotePeerId);
                             peer.send(creator.interestedMessage(), out, remotePeerId);
                         }
 
@@ -271,7 +271,7 @@ public class MessageHandler implements Runnable {
                         /*Test Print Statement:
                         * System.out.println("Sending the data " + new String(data)); */
 
-                        logger.sentPieceMessage(peer.peerID, remotePeerId, pieceIndex);
+                        //logger.sentPieceMessage(peer.peerID, remotePeerId, pieceIndex);
                         peer.send(creator.pieceMessage(pieceIndex, data), out, remotePeerId);
                     }else{
                         /*Test Print Statement:
@@ -292,7 +292,7 @@ public class MessageHandler implements Runnable {
                     /*Test Print Statement:
                     *  System.out.println("Received piece message from " + remotePeerId + "for index " + pieceIndexInt); */
 
-                    logger.receivedPieceMessage(peer.peerID, remotePeerId, pieceIndexInt);
+                    //logger.receivedPieceMessage(peer.peerID, remotePeerId, pieceIndexInt);
 
                     //Download the received file piece
                     peer.file[pieceIndexInt] = piece;
@@ -307,7 +307,7 @@ public class MessageHandler implements Runnable {
                     peer.peerManager.forEach((k,v) ->{
                         if(k != peer.peerID){
                             try {
-                                logger.sentHaveMessage(peer.peerID, k, pieceIndexInt);
+                                //logger.sentHaveMessage(peer.peerID, k, pieceIndexInt);
                                 peer.send(creator.haveMessage(pieceIndexInt), out, k );
                             } catch (IOException e) {
                                 e.printStackTrace();
@@ -321,7 +321,7 @@ public class MessageHandler implements Runnable {
                         /* Test Print Statement:
                         * System.out.println("Requesting Piece after receiving piece request piece is " + requestPiece); */
 
-                        logger.requestedPieceFrom(peer.peerID, remotePeerId, requestPiece);
+                        //logger.requestedPieceFrom(peer.peerID, remotePeerId, requestPiece);
 
                         //Create and send request message for the piece we want
                         peer.send(creator.requestMessage(requestPiece), out, remotePeerId);
@@ -347,7 +347,7 @@ public class MessageHandler implements Runnable {
 
                     remotePeerId = peerIdInt;
                     logger.connectedFromPeer(peer.peerID, remotePeerId);
-                    logger.receivedHandshakeFrom(peer.peerID, remotePeerId);
+                    //logger.receivedHandshakeFrom(peer.peerID, remotePeerId);
                     peer.send(creator.bitFieldMessage(peer.bitfield), out, remotePeerId);
                     }
                     peer.peerManager.get(remotePeerId).out = out;

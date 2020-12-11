@@ -45,8 +45,62 @@ public class WritingLog {
 //        logger.info(msg + " " + time());
 //    }
 
+    public void setInitialVariables(int peerID, BitSet bitfield, String hostName, int portNumber, int containsFile){
+        logger.info(time() + "Peer "+ peerID + " has started its server and contains the following initial variables: ");
+        logger.info("Peer bitfield: " + bitfield.toString());
+        logger.info("Peer hostname: "+ hostName);
+        logger.info("Peer port number: " + portNumber);
+        logger.info("Peer contains file: "+ containsFile);
+    }
+
+    public void setCommonVariables(int numOfPreferredNeighbors, int unchokingInterval, int optimisticUnchokingInterval, String downloadFileName, int fileSize, int pieceSize, int numPieces){
+        logger.info(time() + "Common peer variables are set: ");
+        logger.info("Peer numbOfPreferredNeighbors: " + numOfPreferredNeighbors);
+        logger.info("Peer unchoking interval: "+ unchokingInterval);
+        logger.info("Peer optimistically unchoking interval: " + optimisticUnchokingInterval);
+        logger.info("Peer download file name: "+ downloadFileName);
+        logger.info("Peer file size: "+ fileSize);
+        logger.info("Peer piece size: "+ pieceSize);
+        logger.info("Peer number of pieces: "+ numPieces);
+    }
+
     public void tcpConnectiontoPeer(int peerID_1, int peerID_2){
         logger.info(time() + "Peer " + peerID_1 + " makes a connection to Peer " + peerID_2 + ".");
+    }
+
+    public void connectedFromPeer(int peerID_1, int peerID_2){
+        logger.info(time() + "Peer " + peerID_1 + " is connected from Peer " + peerID_2 + ".");
+    }
+
+    public void changeNeighbors(int peer_ID, int[] neighborIDList){
+        logger.info(time() + "Peer " + peer_ID + " has the preferred neighbors " +
+                Arrays.toString(neighborIDList) + ".");
+    }
+
+    public void optimisticUnchoke(int peer_ID, int unchokedNeighborID){
+        logger.info(time() + "Peer " + peer_ID + " has the optimistically unchoked neighbor "
+                + unchokedNeighborID + ".");
+    }
+
+    public void unchokedByNeighbor(int peerID_1, int peerID_2){
+        logger.info(time() + "Peer " + peerID_1 + " is unchoked by " + peerID_2 + ".");
+    }
+
+    public void chokedByNeighbor(int peerID_1, int peerID_2){
+        logger.info(time() + "Peer " + peerID_1 + " is choked by " + peerID_2 + ".");
+    }
+
+    public void receivesHave(int peerID_1, int peerID_2, int pieceIndex){
+        logger.info(time() + "Peer " + peerID_1 + " received the `have` message from" + peerID_2 +
+                " for the piece " + pieceIndex + ".");
+    }
+
+    public void receivesInterested(int peerID_1, int peerID_2){
+        logger.info(time() + "Peer " + peerID_1 + " received the `interested` message from " + peerID_2 + ".");
+    }
+
+    public void receivesUninterested(int peerID_1, int peerID_2){
+        logger.info(time() + "Peer " + peerID_1 + " received the `not interested` message from " + peerID_2 + ".");
     }
 
     public void receivedRequestMessage(int peerID_1, int peerID_2, int pieceIndex){
@@ -54,6 +108,16 @@ public class WritingLog {
                 + pieceIndex + " from Peer "+ peerID_2 + ".");
     }
 
+    public void finishedDownloadingPiece(int peerID_1, int peerID_2, int pieceIndex, int numPieces){
+        logger.info(time() + "Peer " + peerID_1 + " has downloaded the piece " + pieceIndex + " from " + peerID_2
+                + ". Now the number of pieces it has is " + numPieces + ".");
+    }
+
+    public void finishedDownloadComplete(int peerID_1){
+        logger.info(time() + "Peer " + peerID_1 + " has downloaded the complete file.");
+    }
+
+    /*
     public void sentNotInterestedMessage(int peerID_1, int peerID_2){
         logger.info(time()+ "Peer "+ peerID_1 + " sent the `not interested` message to Peer "+ peerID_2 + ".");
     }
@@ -75,70 +139,23 @@ public class WritingLog {
                 + peerID_2 + ".");
     }
 
-    public void connectedFromPeer(int peerID_1, int peerID_2){
-        logger.info(time() + "Peer " + peerID_1 + " is connected from Peer " + peerID_2 + ".");
-    }
-
-    public void changeNeighbors(int peer_ID, int[] neighborIDList){
-        logger.info(time() + "Peer " + peer_ID + " has the preferred neighbors " +
-                Arrays.toString(neighborIDList) + ".");
-    }
-
-    public void optimisticUnchoke(int peer_ID, int unchokedNeighborID){
-        logger.info(time() + "Peer " + peer_ID + " has the optimistically unchoked neighbor "
-                + unchokedNeighborID + ".");
-    }
-
-    public void unchokedByNeighbor(int peerID_1, int peerID_2){
-        logger.info(time() + "Peer " + peerID_1 + " is unchoked by " + peerID_2 + ".");
-    }
 
     public void requestedPieceFrom(int peerID_1, int peerID_2, int pieceIndex){
         logger.info(time() + "Peer "+ peerID_1 + " has requested piece " + pieceIndex + " from Peer "+ peerID_2);
     }
 
-    public void chokedByNeighbor(int peerID_1, int peerID_2){
-        logger.info(time() + "Peer " + peerID_1 + " is choked by " + peerID_2 + ".");
-    }
 
-    public void receivesHave(int peerID_1, int peerID_2, int pieceIndex){
-        logger.info(time() + "Peer " + peerID_1 + " received the `have` message from" + peerID_2 +
-                " for the piece " + pieceIndex + ".");
-    }
-
-    public void receivesInterested(int peerID_1, int peerID_2){
-        logger.info(time() + "Peer " + peerID_1 + " received the `interested` message from " + peerID_2 + ".");
-    }
-
-    public void receivesUninterested(int peerID_1, int peerID_2){
-        logger.info(time() + "Peer " + peerID_1 + " received the `not interested` message from " + peerID_2 + ".");
-    }
-
-    public void finishedDownloadingPiece(int peerID_1, int peerID_2, int pieceIndex, int numPieces){
-        logger.info(time() + "Peer " + peerID_1 + " has downloaded the piece " + pieceIndex + " from " + peerID_2
-                + ". Now the number of pieces it has is " + numPieces + ".");
-    }
 
     public void sentHaveMessage(int peerID_1, int peerID_2, int pieceIndex){
         logger.info(time() + "Peer " + peerID_1 + " sent a `have` message to Peer " + peerID_2 + " with piece " + pieceIndex +".");
     }
 
-    public void finishedDownloadComplete(int peerID_1){
-        logger.info(time() + "Peer " + peerID_1 + " has downloaded the complete file.");
-    }
 
     public void receivedHandshakeFrom(int peerID_1, int peerID_2){
         logger.info(time() + "Peer " + peerID_1 + " has received a handshake message from Peer " + peerID_2 + ".");
     }
+    */
 
-    public void setInitialVariables(int peerID, BitSet bitfield, String hostName, int portNumber, int containsFile){
-        logger.info(time() + "Peer "+ peerID + " has started its server and contains the following initial variables: ");
-        logger.info("Peer bitfield: " + bitfield.toString());
-        logger.info("Peer hostname: "+ hostName);
-        logger.info("Peer port number: " + portNumber);
-        logger.info("Peer contains file: "+ containsFile);
-
-    }
 
     public String time(){
         SimpleDateFormat formatter= new SimpleDateFormat("yyyy-MM-dd 'at' HH:mm:ss z");
