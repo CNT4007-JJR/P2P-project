@@ -1,4 +1,5 @@
 package edu.ufl.jjr.peer;
+import edu.ufl.jjr.writingLog.WritingLog;
 
 import edu.ufl.jjr.MessageCreator.MessageCreator;
 
@@ -28,7 +29,7 @@ public class Peer{
     public int optimisticallyUnchockedPeer;
     public int downloadedBytes;
     public List<Integer> unchokedPeers;
-
+    double downloadRate;
 
     //Common properties known by all peers, based off Common.cfg file
     public int numOfPreferredNeighbors;
@@ -39,13 +40,16 @@ public class Peer{
     public int pieceSize;
     public int numPieces;
     public BitSet bitfield;
-    public int completedPeers;
+    public int numPiecesDownloaded;
     public boolean hasFile;
+    public WritingLog logger;
 
 
     public Peer() throws FileNotFoundException {
         this.optimisticallyUnchockedPeer = 0;
         this.unchokedPeers = new ArrayList<>();
+        this.downloadRate = 0;
+        this.downloadedBytes = 0;
         readCommonConfig();
     }
 
@@ -70,7 +74,6 @@ public class Peer{
         fileSize = Integer.parseInt(configVariables.get(4));
         pieceSize = Integer.parseInt(configVariables.get(5));
         numPieces = (int) Math.ceil((double)fileSize/pieceSize);
-        completedPeers = 1;
 
         return true;
     }
@@ -86,9 +89,11 @@ public class Peer{
         this.bitfield = new BitSet(numPieces);
         this.creator = new MessageCreator();
         this.downloadedBytes = 0;
+        this.numPiecesDownloaded = 0;
 
         if(containsFile == 1){
             this.bitfield.set(0,numPieces, true);
+            this.numPiecesDownloaded = numPieces;
             this.hasFile = true;
         }else{
             this.bitfield.clear(0,numPieces);
@@ -105,7 +110,7 @@ public class Peer{
         validPieces.flip(0,numPieces);
         validPieces.and(interestingPieces.get(remotePeerId));
 
-        System.out.println(validPieces);
+        //System.out.println(validPieces);
 
         List<Integer> validPieceIndex = new ArrayList<>();
 
@@ -123,9 +128,13 @@ public class Peer{
         this.out = out;
     }
 
+    public void incrementNumPiecesDownloaded(){
+        this.numPiecesDownloaded += 1;
+    }
+
     public void addInterestedPeer(int peerID) {
         if(interestedPeers.contains(peerID)){
-            System.out.println("Peer labeled as interested.");
+            //System.out.println("Peer labeled as interested.");
         }
         else{
             interestedPeers.add(peerID);
@@ -136,12 +145,14 @@ public class Peer{
             interestedPeers.remove(new Integer(peerID));
         }
         else{
-            System.out.println("Peer has been labeled as not interested.");
+            //System.out.println("Peer has been labeled as not interested.");
         }
     }
 
     public void setPeerManager(Hashtable<Integer, Peer> peerManager){
         this.peerManager = peerManager;
+        this.logger = new WritingLog(peerManager.get(peerID));
+
     }
 
     public void addUnchokedPeer(int peerID){
@@ -158,11 +169,8 @@ public class Peer{
         return interestedPeers;
     }
 
-    public int getDownloadedBytes() {
-        return downloadedBytes;
-    }
-
     public void updatePeerDownloadedBytes(int bytes){
+        System.out.println("Byte amount to increment by: " + bytes);
         this.downloadedBytes += bytes;
     }
 
@@ -170,6 +178,7 @@ public class Peer{
         this.bitfield.set(index, true);
         if(this.bitfield.nextClearBit(0) == numPieces){
             hasFile = true;
+            containsFile = 1;
         }
     }
 
@@ -192,7 +201,7 @@ public class Peer{
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
-                while(completedPeers != peerManager.size()){
+                while(true){
                     try {
                         preferredPeersSelection(interestedPeers, start[0]);
                         start[0] = Instant.now();
@@ -228,11 +237,14 @@ public class Peer{
         //For each peer (neighbor) in peerManager, except for itself, calculate the download rate
         peerManager.forEach((id,peerValues) -> {
             if(id != peerID){
-                int timeElapsed = Duration.between(startTime, finish).getNano();
-                double downloadRate = ((double) downloadedBytes/timeElapsed);
-                candidatePeers.put(id, downloadRate);
+                    int timeElapsed = Duration.between(startTime, finish).getNano();
+                    //System.out.println("id: " + id+ " bytes: " +peerValues.downloadedBytes);
+                    peerValues.downloadRate = ((double) peerValues.downloadedBytes / timeElapsed);
+                candidatePeers.put(id, peerValues.downloadRate);
             }
         });
+
+        resetPeerDownloadedBytes();
 
         //Create a list of all download rates, sort in ascending order
         Collection<Double> values = candidatePeers.values();
@@ -242,13 +254,16 @@ public class Peer{
         if(interestedPeers.size() != 0){
             //If the number of interested peers is less than the preferred neighbor limit, just select all interested peers
             if(interestedPeers.size() <= preferredNeighbors.length){
-                System.out.println("All interested peers fit within preferredNeighbors requirement!");
-                System.out.println("Size of interested peers: "+ interestedPeers.size());
+                System.out.println("NOT ENOUGH INTERESTED PEERS TO FILL NEIGHBORS");
+                //System.out.println("All interested peers fit within preferredNeighbors requirement!");
+                //System.out.println("Size of interested peers: "+ interestedPeers.size());
 
                 for(int i = 0; i < interestedPeers.size(); i++){
                     preferredNeighbors[i] = interestedPeers.get(i);
-                    System.out.println("Peer: "+ preferredNeighbors[i] +" selected as preferred neighbor!");
+                    //System.out.println("Peer: "+ preferredNeighbors[i] +" selected as preferred neighbor!");
                 }
+
+                logger.changeNeighbors(peerID, preferredNeighbors);
 
                 for(int j = 0; j < preferredNeighbors.length; j++){
 
@@ -263,7 +278,7 @@ public class Peer{
 
                 //Remove any peer from the unchokedPeers list if they are not part of the preferred peers array, send choke message
                 for (int peer: unchokedPeers) {
-                    System.out.println("Unchoked peer: " + peer);
+                    //System.out.println("Unchoked peer: " + peer);
                     boolean included = false;
                     for (int neighbor: preferredNeighbors) {
                         if (neighbor == peer) {
@@ -272,9 +287,9 @@ public class Peer{
                         }
                     }
 
-                    System.out.println("Peer inclusion: " + included);
+                    //System.out.println("Peer inclusion: " + included);
                     if(!included && peer!=0){
-                        System.out.println("Peer "+ peer + " has been choked!");
+                        //System.out.println("Peer "+ peer + " has been choked!");
                         
                         //Send choke message to the removed peer
                         send(creator.chokeMessage(), peerManager.get(peer).out, peer);
@@ -286,23 +301,23 @@ public class Peer{
                     removeUnchokedPeer(peer);
                 }
 
-
-                System.out.println();
+                //System.out.println();
 
             }
             else if(containsFile == 1){
-                System.out.println("Peer contains full file, randomly select peers.");
-                System.out.println();
+                //System.out.println("PEER CONTAINS FILE");
+                //System.out.println("Peer contains full file, randomly select peers.");
+                //System.out.println();
                 //Randomly select preferred peers based on those that are interested
                 Collections.shuffle(interestedPeers, new Random());
 
-                System.out.println();
+                //System.out.println();
                 for(int i = 0; i < preferredNeighbors.length; i++){
                     preferredNeighbors[i] = interestedPeers.get(i);
-                    System.out.println("Peer: "+ preferredNeighbors[i] +" selected as preferred neighbor!");
+                    //System.out.println("Peer: "+ preferredNeighbors[i] +" selected as preferred neighbor!");
                 }
-                System.out.println();
 
+                logger.changeNeighbors(peerID, preferredNeighbors);
 
                 for(int j = 0; j < preferredNeighbors.length; j++){
 
@@ -317,7 +332,7 @@ public class Peer{
 
                 //Remove any peer from the unchokedPeers list if they are not part of the preferred peers array, send choke message
                 for (int peer: unchokedPeers) {
-                    System.out.println(unchokedPeers.size());
+                    //System.out.println(unchokedPeers.size());
                     boolean included = false;
                     for (int neighbor: preferredNeighbors) {
                         if (neighbor == peer) {
@@ -327,7 +342,7 @@ public class Peer{
                     }
 
                     if(!included && peer!=0){
-                        System.out.println("Peer "+ peer + " has been choked!");
+                        //System.out.println("Peer "+ peer + " has been choked!");
 
                         //Send choke message to the removed peer
                         send(creator.chokeMessage(), peerManager.get(peer).out, peer);
@@ -339,9 +354,11 @@ public class Peer{
                     removeUnchokedPeer(peer);
                 }
 
-                System.out.println();
+                //System.out.println();
 
             } else  {
+               System.out.println("HERE FOR DOWNLOAD RATE!");
+               // System.out.println(preferredNeighbors.length);
                 for(int i = 0; i < preferredNeighbors.length; i++){
                     if(interestedPeers.contains(getKey(candidatePeers, listOfValues.get(listOfValues.size()-1)))){
                         System.out.println("Max Download Rate Value: "+ listOfValues.get(listOfValues.size()-1));
@@ -351,7 +368,8 @@ public class Peer{
                     }
                     listOfValues.remove(listOfValues.size()-1);
                 }
-                System.out.println();
+
+                logger.changeNeighbors(peerID, preferredNeighbors);
 
                 //Check whether the preferredNeighbor ID is part of the unchoked peers already, add if not
                 for(int j = 0; j < preferredNeighbors.length; j++){
@@ -374,8 +392,7 @@ public class Peer{
                     }
 
                     if(!included && peer!=0){
-                        System.out.println("Peer "+ peer + " has been choked!");
-
+                        //System.out.println("Peer "+ peer + " has been choked!");
 
                         //Send choke message to the removed peer
                         send(creator.chokeMessage(), peerManager.get(peer).out, peer);
@@ -387,13 +404,10 @@ public class Peer{
                     removeUnchokedPeer(peer);
                 }
 
-                System.out.println();
-
             }
         }
 
     }
-
 
     public void startOptimisticallyUnchokingPeer() {
         Peer peer = this;
@@ -402,7 +416,7 @@ public class Peer{
             public void run() {
 
                 //We are gonna have to check when all the peers have completed their download to stop this thread
-                while(completedPeers != peerManager.size()) {
+                while(true) {
                     try {
                         peer.optimisticallyUnchokePeer(peer.getInterestedPeers());
                     } catch (IOException e) {
@@ -430,6 +444,7 @@ public class Peer{
         if(!candidatePeers.isEmpty()) {
             Collections.shuffle(candidatePeers, new Random());
             int optimisticallyUnchokedPeerId = candidatePeers.get(0);
+            logger.optimisticUnchoke(peerID, optimisticallyUnchokedPeerId);
             send(creator.unchokeMessage(), peerManager.get(optimisticallyUnchokedPeerId).out, optimisticallyUnchokedPeerId);
             this.optimisticallyUnchockedPeer = optimisticallyUnchokedPeerId;
         }
@@ -450,11 +465,10 @@ public class Peer{
         }
     }
 
-
     public void readFile(){
         if(containsFile == 1) {
             try {
-                byte[] allBytes = Files.readAllBytes(Paths.get(downloadFileName));
+                byte[] allBytes = Files.readAllBytes(Paths.get("./peer_"+peerID+"/"+downloadFileName));
                 for (int i = 0, j = 0; i < allBytes.length; i += pieceSize, j++) {
                     byte bytes[] = Arrays.copyOfRange(allBytes, i, i + pieceSize);
                     file[j] = bytes;
@@ -464,7 +478,7 @@ public class Peer{
                 ioException.printStackTrace();
             }
         }
-        System.out.println("TheFile.dat byte array: " + Arrays.deepToString(file));
+        //System.out.println("byte array: " + Arrays.deepToString(file));
     }
 
     public void send(byte [] msg, ObjectOutputStream outputStream, int remotePeerId){
@@ -472,12 +486,12 @@ public class Peer{
             outputStream.writeObject(msg);
             outputStream.flush();
             if(remotePeerId == 0){
-                System.out.println("Sending initial handshake message: " + msg + " from Peer " + peerID);
+                //System.out.println("Sending initial handshake message: " + msg + " from Peer " + peerID);
             }
             else{
-                System.out.println("Sending message: " + msg + " from Peer " + peerID +" to Peer " + remotePeerId);
+                //System.out.println("Sending message: " + msg + " from Peer " + peerID +" to Peer " + remotePeerId);
             }
-            System.out.println();
+            //System.out.println();
         }
         catch(IOException ioException){
             ioException.printStackTrace();
@@ -487,7 +501,12 @@ public class Peer{
     public void saveFileToDisk() {
         FileOutputStream fileOutputStream = null;
         try {
-            fileOutputStream = new FileOutputStream(downloadFileName+peerID);
+            File dir = new File("./peer_"+ peerID);
+            dir.mkdirs();
+            File fileLocation = new File(dir, downloadFileName);
+            fileLocation.createNewFile();
+            fileOutputStream = new FileOutputStream(fileLocation);
+
             for(int i = 0; i<numPieces; i++){
                 fileOutputStream.write(file[i]);
             }
@@ -509,6 +528,5 @@ public class Peer{
             }
         }
     }
-
 }
 
